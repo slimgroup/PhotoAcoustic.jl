@@ -1,5 +1,4 @@
-from devito import Inc, Operator, Function, CustomDimension
-from devito.builtins import initialize_function
+from devito import Operator
 from devito.tools import as_tuple
 
 import numpy as np
@@ -9,12 +8,13 @@ from geom_utils import src_rec
 from fields import wavefield
 from kernels import wave_kernel
 from utils import opt_op
-from geom_utils import geom_expr
 
 
-# Forward propagation
 def forward_photo(model, rcv_coords, init_dist, nt, space_order=8):
-
+    """
+    Forward photoacoustic propagator. Propagates and intitial state init_dist
+    conssisting of the first two time steps (u(t=0)=f and u.dt(t=0)=g)
+    """
     # Setting forward wavefield
     u = wavefield(model, space_order, nt=nt)
 
@@ -28,23 +28,26 @@ def forward_photo(model, rcv_coords, init_dist, nt, space_order=8):
     pde = wave_kernel(model, u)
 
     # Setup receiver
-    _, rcv = src_rec(model, u,  nt=nt,
-                                rec_coords=rcv_coords)
+    _, rcv = src_rec(model, u, nt=nt, rec_coords=rcv_coords)
 
     rec_expr = rcv.interpolate(expr=u)
-    
+
     # Create operator and run
     op = Operator(pde + rec_expr,
                   subs=model.spacing_map, name="photoacoustic_forward",
                   opt=opt_op(model))
     op.cfunction
 
-    summary = op()
+    op()
 
     # Output
     return rcv.data
 
+
 def adjoint_photo(model, y, rcv_coords, space_order=8):
+    """
+    Adjoint photoacoustic propagator.
+    """
     # Number of time steps
     nt = y.shape[0]
 
@@ -57,15 +60,13 @@ def adjoint_photo(model, y, rcv_coords, space_order=8):
     # Inject -dt of source so that we directly solve for -v.dt
     dt = model.grid.time_dim.spacing
     namef = as_tuple(v)[0].name
-  
+
     src = PointSource(name="src%s" % namef, grid=model.grid, ntime=nt,
                       coordinates=rcv_coords)
-    src.data[:] = y[:] 
-    
+    src.data[:] = y[:]
+
     u_n = as_tuple(v)[0].backward
-    #geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2 / (model.m * model.irho) )
-    geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2  )
-        
+    geom_expr = src.inject(field=u_n, expr=-dt**2 / (model.m * model.irho) * src.dt)
 
     # Create operator and run
     subs = model.spacing_map
@@ -73,11 +74,10 @@ def adjoint_photo(model, y, rcv_coords, space_order=8):
                   subs=subs, name="adjoint",
                   opt=opt_op(model))
     op.cfunction
-    
+
     # Run operator
-    summary = op()
+    op()
 
     # Adjoint math says that it is -dt of the adjoint variable at T=0
     # Source injection of -src.dt makes direct output of v the correct adjoint
-    return v.data[0] 
-
+    return v.data[0]

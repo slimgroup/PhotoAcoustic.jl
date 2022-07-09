@@ -47,10 +47,6 @@ A = judiPhoto(F, recGeometry;)
 
 # Random
 init_dist = randn(Float32, n)
-
-# Point source
-#init_dist[div(n[1],2), div(n[2],2)] = 1
-
 p = judiPhotoSource(init_dist);
 
 ############################# Simulate forward data    ##############################################

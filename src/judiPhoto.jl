@@ -8,12 +8,11 @@ struct judiPhoto{D, O} <: judiComposedPropagator{D, O}
 end
 
 function judiPhoto(F::judiPropagator{D, O}, rInterpolation::Geometry;) where {D, O}
-    return judiPhoto{D, :forward}( rec_space(rInterpolation),space(F.model.n), F, rInterpolation)
+    return judiPhoto{D, :forward}(rec_space(rInterpolation),space(F.model.n), F, rInterpolation)
 end
 
 adjoint(J::judiPhoto{D, O}) where {D, O} = judiPhoto{D, adjoint(O)}(J.n, J.m, J.F, J.rInterpolation)
 getindex(J::judiPhoto{D, O}, i) where {D, O} = judiPhoto{D, O}(J.m[i], J.n[i], J.F, J.rInterpolation[i])
-
 
 function make_input(J::judiPhoto{D, :forward}, q) where {D<:Number}
     recGeometry = Geometry(J.rInterpolation)
@@ -25,7 +24,7 @@ end
 *(J::judiPhoto{T, :forward}, q::Array{T, 3}) where {T} = J*vec(q)
 *(J::judiPhoto{T, :forward}, q::Array{T, 4}) where {T} = J*vec(q)
 
-JUDI.process_input_data(::judiPhoto{D, :forward}, q::judiPhotoSource{D}) where {D<:Number, N} = q
+JUDI.process_input_data(::judiPhoto{D, :forward}, q::judiPhotoSource{D}) where {D<:Number} = q
 
 ############################################################
 
@@ -68,7 +67,7 @@ function propagate(J::judiPhoto{T, :adjoint}, q::AbstractArray{T}) where {T, O}
 
     g = pycall(impl."adjoint_photo", PyArray, modelPy, qIn, rec_coords,  space_order=J.F.options.space_order)
     #println(size(g))
-    g = remove_padding(g, modelPy.padsizes; true_adjoint=false)
+    g = remove_padding(g, modelPy.padsizes; true_adjoint=options.sum_padding)
    
     return judiPhotoSource(g);
 end

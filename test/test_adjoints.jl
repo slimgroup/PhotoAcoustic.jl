@@ -31,7 +31,6 @@ dt = calculate_dt(model) / 2
 # Set up receiver structure
 recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
 
-
 # testing parameters and utils
 tol = 5f-4
 maxtry = 3
@@ -78,5 +77,4 @@ test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip 
         test_adjoint(adj_F, ntry==maxtry)
     end
     println("Adjoint test after $(ntry) tries")
-
 end

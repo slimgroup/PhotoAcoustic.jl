@@ -37,7 +37,6 @@ recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
 # Need to fix this
 opt = Options(dt_comp=dt)
 
-# 
 F = judiModeling(model; options=opt)
 
 # Setup operators
