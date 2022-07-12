@@ -1,5 +1,4 @@
-using PhotoAcoustic
-using JUDI, LinearAlgebra, Test
+using PhotoAcoustic, LinearAlgebra, Test, Printf
 
 # Set up model structure
 n = (80, 80)   # (x,y,z) or (x,z)
@@ -55,22 +54,32 @@ test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip 
 @testset "Photoacoustic  adjoint test with constant background" begin
   
     opt = Options(sum_padding=true, dt_comp=dt)
-    F = judiModeling(model;options=opt)
-	# Setup operators
-	A = judiPhoto(F, recGeometry;)
+    F = judiModeling(model; options=opt)
+    Pr = judiProjection(recGeometry)
+    I = judiInitialStateProjection(model)
 
-    w =  rand(model.n...)
-    w = judiPhotoSource(w;)
+	# Setup operators
+	A = judiPhoto(F, recGeometry)
+    A2 = Pr*F*I'
+    A3 = judiPhoto(model, recGeometry; options=opt)
+
+    w = rand(Float32, model.n...)
+    w = judiInitialState(w)
 
     # Nonlinear modeling
     y = A*w
+    y2 = A2*w
+    y3 = A3*w
+
+    @test y ≈ y2
+    @test y ≈ y3
 
     # Run test until succeeds in case of bad case
     adj_F = false
     ntry = 0
     while (!adj_F) && ntry < maxtry
-        q = rand(model.n...)
-        q_rand = judiPhotoSource(q;)
+        q = rand(Float32, model.n...)
+        q_rand = judiInitialState(q)
 
         adj_F = run_adjoint(A, q_rand, y; test_F=!adj_F)
         ntry +=1

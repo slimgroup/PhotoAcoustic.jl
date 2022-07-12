@@ -5,10 +5,10 @@ on:
   # to be merged in master
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   test:
@@ -22,6 +22,7 @@ jobs:
         version:
           - '1.6'
           - '1.7'
+          - '1.8'
         os:
           - ubuntu-latest
         arch:
@@ -29,7 +30,7 @@ jobs:
 
         include:
           - os: macos-latest
-            version: '1.7'
+            version: '1'
             arch: x64
 
     steps:

@@ -34,7 +34,7 @@ def forward_photo(model, rcv_coords, init_dist, nt, space_order=8):
 
     # Create operator and run
     op = Operator(pde + rec_expr,
-                  subs=model.spacing_map, name="photoacoustic_forward",
+                  subs=model.spacing_map, name="ISforward",
                   opt=opt_op(model))
     op.cfunction
 
@@ -66,12 +66,12 @@ def adjoint_photo(model, y, rcv_coords, space_order=8):
     src.data[:] = y[:]
 
     u_n = as_tuple(v)[0].backward
-    geom_expr = src.inject(field=u_n, expr=-dt**2 / (model.m * model.irho) * src.dt)
+    geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2 )
 
     # Create operator and run
     subs = model.spacing_map
     op = Operator(pde + geom_expr,
-                  subs=subs, name="adjoint",
+                  subs=subs, name="ISadjoint",
                   opt=opt_op(model))
     op.cfunction
 

@@ -45,7 +45,7 @@ A = judiPhoto(F, recGeometry;)
 # Photoacoustic source distribution
 init_dist = zeros(Float32, n)
 init_dist[div(n[1],2), div(n[2],2)] = 1
-p = judiPhotoSource(init_dist);
+p = judiInitialState(init_dist);
 
 dsim = A*p
 p_adj = A'*dsim

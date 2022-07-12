@@ -1,16 +1,17 @@
 module PhotoAcoustic
 
 
-using JUDI, LinearAlgebra
+using LinearAlgebra, Reexport
+@reexport using JUDI
+
 using JUDI.DSP, JUDI.PyCall
 
 import Base: getindex, *, copy!, copyto!, similar
-import JUDI: judiMultiSourceVector, judiComposedPropagator, judiPropagator, make_input, propagate, zero
+import JUDI: judiMultiSourceVector, judiComposedPropagator, judiPropagator, judiNoopOperator, jAdjoint, Projection
+import JUDI: RangeOrVec, make_input, propagate, zero, process_input_data, wrapcall_data
 import LinearAlgebra: adjoint
 
 const impl = PyNULL()
-# Useful types
-const RangeOrVec = Union{AbstractRange, Vector}
 
 function __init__()
     pushfirst!(PyVector(pyimport("sys")."path"),dirname(pathof(PhotoAcoustic)))

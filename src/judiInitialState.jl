@@ -27,10 +27,7 @@ Arguments
 `source`: a (Vector of) 2D-3D array with spatial distribution of photoacoustic sources
 
 """
-function judiInitialState(source::Vector{Array{T, N}}) where {T<:Number, N}
-    return judiInitialState{T}(length(source), sourceCell)
-end
-
+judiInitialState(source::Vector{Array{T, N}}) where {T<:Number, N} = judiInitialState{T}(length(source), source)
 judiInitialState(source::Array{T, N}) where {T<:Number, N} = judiInitialState([source])
 judiInitialState(source::Array{T, N}, nsrc::Integer) where {T<:Number, N} = judiInitialState([source for s=1:nsrc])
 
