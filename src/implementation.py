@@ -19,8 +19,10 @@ def forward_photo(model, rcv_coords, init_dist, nt, space_order=8):
     u = wavefield(model, space_order, nt=nt)
 
     # Set the first two entries of wavefield to spatial distribution init_dist
-    u.data[0] = np.array(init_dist / (model.m * model.irho).data)
-    u.data[1] = np.array(init_dist / (model.m * model.irho).data)
+    #u.data[0] = np.array(init_dist / (model.m * model.irho).data)
+    #u.data[1] = np.array(init_dist / (model.m * model.irho).data)
+    u.data[0] = np.array(init_dist)
+    u.data[1] = np.array(init_dist)
 
     # Set up PDE expression and rearrange
     pde = wave_kernel(model, u)
@@ -61,7 +63,8 @@ def adjoint_photo(model, y, rcv_coords, space_order=8):
     src.data[:] = y[:] 
     
     u_n = as_tuple(v)[0].backward
-    geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2 / (model.m * model.irho) )
+    #geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2 / (model.m * model.irho) )
+    geom_expr = src.inject(field=u_n, expr=-src.dt*dt**2  )
         
 
     # Create operator and run
