@@ -8,4 +8,4 @@ makedocs(sitename="Photoacoustic imaging in Julia",
              "Tutorials" => ["LearnedPrior.md"]
          ])
 
-deploydocs(repo="github.com/slimgroup/PhotoAcoustic.jl")
+deploydocs(repo="github.com/slimgroup/PhotoAcoustic.jl", devbranch="main")
