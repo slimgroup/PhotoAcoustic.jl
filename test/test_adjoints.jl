@@ -42,7 +42,8 @@ function run_adjoint(F, q, y; test_F=true )
     # Result F
     a = dot(y, d_hat)
     b = dot(q, q_hat)
-    @printf(" <F x, y> : %2.5e, <x, F' y> : %2.5e, relative error : %2.5e \n", a, b, (a - b)/(a + b))
+
+    @printf(" <F x, y> : %2.5e, <x, F' y> : %2.5e, relative error : %2.5e, ratio: %2.5e \n", a, b, (a - b)/(a + b), b/a)
     isapprox(a/(a+b), b/(a+b), atol=tol, rtol=0)
 end
 
@@ -53,7 +54,7 @@ test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip 
 # Photoacoustic operator
 @testset "Photoacoustic  adjoint test with constant background" begin
   
-    opt = Options(sum_padding=true, dt_comp=dt)
+    opt = Options()
     F = judiModeling(model; options=opt)
     Pr = judiProjection(recGeometry)
     I = judiInitialStateProjection(model)
