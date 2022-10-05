@@ -19,8 +19,8 @@ jobs:
 
       - name: Convert notebook
         run: |
-          pip install --upgrade jupyter Pygments
-          jupyter nbconvert --to markdown --output-dir='../../docs/src' --output LearnedPrior
+          pip install --upgrade jupyter Pygments "MarkupSafe==2.0.1" "jinja2<3.1"
+          jupyter nbconvert --to markdown --output-dir='../../docs/src' --output LearnedPrior Flux_AD_Integration_Deep_Prior.ipynb
         working-directory: examples/notebooks/
 
       - name: Build and deploy
