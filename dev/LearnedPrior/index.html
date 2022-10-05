@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Integrating Photoacoustic operations with automatic differention in Flux. · Photoacoustic imaging in Julia</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Photoacoustic imaging in Julia</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Integrating Photoacoustic operations with automatic differention in Flux.</a><ul class="internal"><li><a class="tocitem" href="#Define-a-neural-network"><span>Define a neural network</span></a></li><li class="toplevel"><a class="tocitem" href="#Define-photoacoustic-simulation"><span>Define photoacoustic simulation</span></a></li><li><a class="tocitem" href="#Get-model-x"><span>Get model x</span></a></li><li class="toplevel"><a class="tocitem" href="#Make-observed-data"><span>Make observed data</span></a></li><li><a class="tocitem" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator"><span>Add rrule for chainfules to know how to differentiate the photoacoustic operator</span></a></li><li><a class="tocitem" href="#Training-Hyperparameters"><span>Training Hyperparameters</span></a></li><li><a class="tocitem" href="#Training"><span>Training</span></a></li><li><a class="tocitem" href="#Show-training-log"><span>Show training log</span></a></li><li><a class="tocitem" href="#Plot-our-results"><span>Plot our results</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Integrating Photoacoustic operations with automatic differention in Flux.</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Integrating Photoacoustic operations with automatic differention in Flux.</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/slimgroup/PhotoAcoustic.jl/blob/master/docs/src/LearnedPrior.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Integrating-Photoacoustic-operations-with-automatic-differention-in-Flux."><a class="docs-heading-anchor" href="#Integrating-Photoacoustic-operations-with-automatic-differention-in-Flux.">Integrating Photoacoustic operations with automatic differention in Flux.</a><a id="Integrating-Photoacoustic-operations-with-automatic-differention-in-Flux.-1"></a><a class="docs-heading-anchor-permalink" href="#Integrating-Photoacoustic-operations-with-automatic-differention-in-Flux." title="Permalink"></a></h1><p>In this tutorial, we will illustrate how to combine the operators of Photoacoustic.jl with the AD system used in Flux.jl. Our illustration will be a photoacoustic inverse problem where the observe data has been generated by a photoacoustic operator <span>$y = Ax$</span>. We want to solve this inverse problem in the least squares sense: <span>$\mathrm{argmin}_{x} \, \|Ax - y\|_2^2$</span></p><p>In the framework of deep prior, we parameterize the unknown <span>$x$</span> as the output of an untrained neural network <span>$G_{\theta}(z)$</span> and optimize over its learnable parameters. </p><p class="math-container">\[\mathrm{argmin}_{\theta} \, \|AG_{\theta}(z) - y\|_2^2\]</p><p>Here is the key: if we want to solve this variational problem we need to &quot;chain&quot; the derivatives of the learned network (derivatives come from Zygote AD system) with the derivate of the photoacoustic operator (hand derived in Photoacoustic.jl). In this tutorial we demonstrate how this is easily done with the ChainRules.jl framework. </p><pre><code class="language-julia">using PhotoAcoustic
+using JUDI
+using Flux
+using ProgressMeter: Progress, next!
+using MLDatasets
+using PyPlot
+using ChainRulesCore
+using Statistics
+using LinearAlgebra
+using Images</code></pre><h2 id="Define-a-neural-network"><a class="docs-heading-anchor" href="#Define-a-neural-network">Define a neural network</a><a id="Define-a-neural-network-1"></a><a class="docs-heading-anchor-permalink" href="#Define-a-neural-network" title="Permalink"></a></h2><pre><code class="language-julia">struct UNet
+    layers::NamedTuple
+end</code></pre><pre><code class="language-julia">&quot;&quot;&quot;
+User Facing API for UNet architecture.
+&quot;&quot;&quot;
+function UNet(channels=[32, 64, 128, 256])
+    return UNet((
+        # Encoding
+        conv1=Conv((3, 3), 1 =&gt; channels[1], stride=1, bias=false),
+        gnorm1=GroupNorm(channels[1], 4, swish),
+            
+        conv2=Conv((3, 3), channels[1] =&gt; channels[2], stride=2, bias=false),
+        gnorm2=GroupNorm(channels[2], 32, swish),
+            
+        conv3=Conv((3, 3), channels[2] =&gt; channels[3], stride=2, bias=false),
+        gnorm3=GroupNorm(channels[3], 32, swish),
+            
+        conv4=Conv((3, 3), channels[3] =&gt; channels[4], stride=2, bias=false),
+        gnorm4=GroupNorm(channels[4], 32, swish),
+            
+        # Decoding
+        tconv4=ConvTranspose((3, 3), channels[4] =&gt; channels[3], stride=2, bias=false),
+        tgnorm4=GroupNorm(channels[3], 32, swish),
+            
+        tconv3=ConvTranspose((3, 3), channels[3] + channels[3] =&gt; channels[2], pad=(0, -1, 0, -1), stride=2, bias=false),
+        tgnorm3=GroupNorm(channels[2], 32, swish),
+            
+        tconv2=ConvTranspose((3, 3), channels[2] + channels[2] =&gt; channels[1], pad=(0, -1, 0, -1), stride=2, bias=false),
+        tgnorm2=GroupNorm(channels[1], 32, swish),
+            
+        tconv1=ConvTranspose((3, 3), channels[1] + channels[1] =&gt; 1, stride=1, bias=false),
+    ))
+end
+
+Flux.@functor UNet</code></pre><pre><code class="language-julia">expand_dims(x::AbstractVecOrMat, dims::Int=2) = reshape(x, (ntuple(i -&gt; 1, dims)..., size(x)...))
+expand_dims_rev(x::AbstractVecOrMat, dims::Int=2) = reshape(x,  size(x)...,(ntuple(i -&gt; 1, dims)...))</code></pre><pre><code class="language-none">expand_dims_rev (generic function with 2 methods)</code></pre><pre><code class="language-julia">function (unet::UNet)(x)
+
+    # Encoder
+    h1 = unet.layers.conv1(x)
+    h1 = unet.layers.gnorm1(h1)
+    
+    h2 = unet.layers.conv2(h1)
+    h2 = unet.layers.gnorm2(h2)
+    
+    h3 = unet.layers.conv3(h2)
+    h3 = unet.layers.gnorm3(h3)
+    
+    h4 = unet.layers.conv4(h3)
+    h4 = unet.layers.gnorm4(h4)
+    
+    # Decoder
+    h = unet.layers.tconv4(h4)
+    h = unet.layers.tgnorm4(h)
+    
+    h = unet.layers.tconv3(cat(h, h3; dims=3))
+    h = unet.layers.tgnorm3(h)
+    
+    h = unet.layers.tconv2(cat(h, h2, dims=3))
+    h = unet.layers.tgnorm2(h)
+    
+    h = unet.layers.tconv1(cat(h, h1, dims=3))
+end</code></pre><h1 id="Define-photoacoustic-simulation"><a class="docs-heading-anchor" href="#Define-photoacoustic-simulation">Define photoacoustic simulation</a><a id="Define-photoacoustic-simulation-1"></a><a class="docs-heading-anchor-permalink" href="#Define-photoacoustic-simulation" title="Permalink"></a></h1><pre><code class="language-julia"># Set up model structure
+n = (68, 68)   # (x,y,z) or (x,z)
+d = (0.08f0, 0.08f0)
+o = (0., 0.)
+
+# Constant water velocity [mm/microsec]
+v = 1.5*ones(Float32,n) 
+m = (1f0 ./ v).^2
+
+# Setup model structure
+model = Model(n, d, o, m;)
+
+# Set up receiver geometry
+nxrec = 64
+xrec = range(0, stop=d[1]*(n[1]-1), length=nxrec)
+yrec = [0f0]
+zrec = range(0, stop=0, length=nxrec)
+
+# receiver sampling and recording time
+time = 5.2333 #[microsec] 
+dt = calculate_dt(model) / 2    
+
+# Set up receiver structure
+recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=1)
+
+# Setup operators
+opt = Options(dt_comp=dt)
+F = judiModeling(model; options=opt)
+A = judiPhoto(F, recGeometry;)</code></pre><pre><code class="language-none">JUDI forward{Float32} propagator (z * x) -&gt; (src * rec * time)</code></pre><h2 id="Get-model-x"><a class="docs-heading-anchor" href="#Get-model-x">Get model x</a><a id="Get-model-x-1"></a><a class="docs-heading-anchor-permalink" href="#Get-model-x" title="Permalink"></a></h2><pre><code class="language-julia">xtrain, ytrain = MLDatasets.MNIST(:train)[:]
+x = judiPhotoSource(imresize(xtrain[:,:,1], (n[1], n[2])))</code></pre><pre><code class="language-none">judiPhotoSource{Float32} with 1 sources</code></pre><h1 id="Make-observed-data"><a class="docs-heading-anchor" href="#Make-observed-data">Make observed data</a><a id="Make-observed-data-1"></a><a class="docs-heading-anchor-permalink" href="#Make-observed-data" title="Permalink"></a></h1><pre><code class="language-julia">y = A*x
+imshow(y.data[1];aspect=&quot;auto&quot;)</code></pre><pre><code class="language-none">Operator `photoacoustic_forward` ran in 0.08 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_12_1.png" alt="png"/></p><pre><code class="language-none">PyObject &lt;matplotlib.image.AxesImage object at 0x19a96d190&gt;</code></pre><h2 id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator"><a class="docs-heading-anchor" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator">Add rrule for chainfules to know how to differentiate the photoacoustic operator</a><a id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator-1"></a><a class="docs-heading-anchor-permalink" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator" title="Permalink"></a></h2><pre><code class="language-julia">function ChainRulesCore.rrule(::typeof(*), A::T, x) where {T&lt;:judiPhoto}
+    y = A*judiPhotoSource(x)
+    pullback(Δy) = (NoTangent(), NoTangent(), expand_dims_rev((A&#39;*Δy).data[1]))
+    return y, pullback
+end
+</code></pre><pre><code class="language-julia">function model_loss(A, model, y, z)
+    norm(A*model(z) - y).^2
+end</code></pre><pre><code class="language-none">model_loss (generic function with 1 method)</code></pre><h2 id="Training-Hyperparameters"><a class="docs-heading-anchor" href="#Training-Hyperparameters">Training Hyperparameters</a><a id="Training-Hyperparameters-1"></a><a class="docs-heading-anchor-permalink" href="#Training-Hyperparameters" title="Permalink"></a></h2><pre><code class="language-julia">device = cpu          # only works on cpu right now
+lr = 5e-3             # learning rate
+epochs = 100           # number of epochs</code></pre><pre><code class="language-none">100</code></pre><pre><code class="language-julia">for i in 28:64  
+    try unet(randn(Float32, i, i, 1, 1))
+    catch
+         println(&quot;error at $(i)&quot;)
+    end
+end
+    
+    
+36
+44
+52
+60
+68
+76</code></pre><pre><code class="language-none">error at 29
+error at 30
+error at 31
+error at 32
+error at 33
+error at 34
+error at 35
+error at 37
+error at 38
+error at 39
+error at 40
+error at 41
+error at 42
+error at 43
+error at 45
+error at 46
+error at 47
+error at 48
+error at 49
+error at 50
+error at 51
+error at 53
+error at 54
+error at 55
+error at 56
+error at 57
+error at 58
+error at 59
+error at 61
+error at 62
+error at 63
+error at 64
+
+
+
+
+
+76</code></pre><pre><code class="language-julia"># initialize UNet model
+unet = UNet() |&gt; device
+
+# initialize input to model. This is not a trainable parameter 
+z = randn(Float32, n[1], n[1], 1, 1) |&gt; device
+
+# ADAM optimizer
+opt = ADAM(lr)
+
+# trainable parameters
+ps = Flux.params(unet);</code></pre><h2 id="Training"><a class="docs-heading-anchor" href="#Training">Training</a><a id="Training-1"></a><a class="docs-heading-anchor-permalink" href="#Training" title="Permalink"></a></h2><pre><code class="language-julia">loss_log = []
+error_log = []
+progress = Progress(epochs)
+
+for epoch = 1:epochs    
+    loss, grad = Flux.withgradient(ps) do
+        model_loss(A, unet, y, z)
+    end
+    Flux.Optimise.update!(opt, ps, grad)
+    
+    append!(loss_log, loss)
+    append!(error_log, norm(unet(z)[:,:,1,1]&#39; - x.data[1][:,:,1,1]&#39;)^2)
+    
+    # progress meter
+    next!(progress; showvalues=[(:loss, loss)])
+end</code></pre><pre><code class="language-none">┌ Warning: ProgressMeter by default refresh meters with additional information in IJulia via `IJulia.clear_output`, which clears all outputs in the cell. 
+│  - To prevent this behaviour, do `ProgressMeter.ijulia_behavior(:append)`. 
+│  - To disable this warning message, do `ProgressMeter.ijulia_behavior(:clear)`.
+└ @ ProgressMeter /Users/rafaelorozco/.julia/packages/ProgressMeter/sN2xr/src/ProgressMeter.jl:618
+[32mProgress: 100%|█████████████████████████████████████████| Time: 0:05:34[39m
+[34m  loss:  0.039336037[39m</code></pre><h2 id="Show-training-log"><a class="docs-heading-anchor" href="#Show-training-log">Show training log</a><a id="Show-training-log-1"></a><a class="docs-heading-anchor-permalink" href="#Show-training-log" title="Permalink"></a></h2><pre><code class="language-julia">subplot(1,2,1); title(&quot;Least squares objective&quot;)
+plot(loss_log; );
+subplot(1,2,2);title(&quot;Error&quot;)
+plot(error_log; );</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_23_0.png" alt="png"/></p><h2 id="Plot-our-results"><a class="docs-heading-anchor" href="#Plot-our-results">Plot our results</a><a id="Plot-our-results-1"></a><a class="docs-heading-anchor-permalink" href="#Plot-our-results" title="Permalink"></a></h2><pre><code class="language-julia">fig = figure(figsize=(8,4))
+subplot(2,3,1); title(&quot;Ground truth x&quot;)
+imshow(x.data[1][:,:,1,1]&#39;; vmin=0,vmax = 1); colorbar()
+subplot(2,3,2); title(&quot;Deep prior estimation G(z)&quot;)
+imshow(unet(z)[:,:,1,1]&#39;; vmin=0,vmax = 1); colorbar() 
+subplot(2,3,3); title(&quot;Error&quot;)
+imshow(unet(z)[:,:,1,1]&#39; - x.data[1][:,:,1,1]&#39;; cmap = &quot;seismic&quot;, vmin=-2, vmax = 2); colorbar()
+
+subplot(2,3,4); title(&quot;Observed data y&quot;)
+imshow(y.data[1];aspect=&quot;auto&quot;); colorbar()
+subplot(2,3,5); title(&quot;Simulated data A*G(z)&quot;)
+imshow((A*judiPhotoSource(unet(z))).data[1];aspect=&quot;auto&quot;); colorbar() 
+subplot(2,3,6); title(&quot;Data residual&quot;)
+imshow((A*judiPhotoSource(unet(z))).data[1] - y.data[1];aspect=&quot;auto&quot;,cmap = &quot;seismic&quot;, vmin=-0.1, vmax = 0.1);  colorbar() 
+
+tight_layout()</code></pre><pre><code class="language-none">Operator `photoacoustic_forward` ran in 0.09 s
+Operator `photoacoustic_forward` ran in 0.09 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_25_1.png" alt="png"/></p><pre><code class="language-julia"></code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 5 October 2022 15:54">Wednesday 5 October 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
