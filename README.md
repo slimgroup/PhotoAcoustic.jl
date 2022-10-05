@@ -1,8 +1,7 @@
 
-| **Documentation**     | **Build Status**    | 
-|:---------------------:|:-------------------:|
-| [![][docs-stable-img]][docs-stable-status] [![][docs-dev-img]][docs-dev-status] | [![CI-PhotoAcoustic](https://github.com/slimgroup/PhotoAcoustic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/slimgroup/PhotoAcoustic.jl/actions/workflows/CI.yml) |
-
+| **Documentation**     | **Build Status**    |       | 
+|:---------------------:|:-------------------:|:-------------------:|
+| [![][docs-stable-img]][docs-stable-status] [![][docs-dev-img]][docs-dev-status] | [![CI-PhotoAcoustic](https://github.com/slimgroup/PhotoAcoustic.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/slimgroup/PhotoAcoustic.jl/actions/workflows/CI.yml) |  [![DOI](https://zenodo.org/badge/509555475.svg)](https://zenodo.org/badge/latestdoi/509555475) |
 
 # PhotoAcoustic.jl
 
