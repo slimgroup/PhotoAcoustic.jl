@@ -1,4 +1,5 @@
 using PhotoAcoustic
-using Test, Printf
+
+using LinearAlgebra, Test, Printf
 
 include("test_adjoints.jl")

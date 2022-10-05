@@ -1,8 +1,5 @@
-using PhotoAcoustic
-using JUDI, LinearAlgebra, PyPlot
-using Statistics
-using DrWatson
-using IterativeSolvers
+using PhotoAcoustic, LinearAlgebra, PyPlot
+using Statistics, IterativeSolvers
 
 # Set up model structure
 n = (80, 80)   # (x,z)
@@ -47,11 +44,7 @@ A = judiPhoto(F, recGeometry;)
 
 # Random
 init_dist = randn(Float32, n)
-
-# Point source
-#init_dist[div(n[1],2), div(n[2],2)] = 1
-
-p = judiPhotoSource(init_dist);
+p = judiInitialState(init_dist);
 
 ############################# Simulate forward data    ##############################################
 
@@ -95,6 +88,3 @@ imshow(d_pred.data[1];extent=data_extent,cmap="seismic", aspect=15, vmin=-vmax_d
 xlabel("Receiver index"); ylabel("Time [microseconds]");; colorbar()
 
 tight_layout()
-fig_name = @strdict maxiters 
-safesave(savename(fig_name; digits=6)*"_lsqr.png", fig); #close(fig)
-

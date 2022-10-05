@@ -1,5 +1,4 @@
 using PhotoAcoustic
-using JUDI
 using Statistics, LinearAlgebra, PyPlot
 
 # Set up model structure
@@ -37,7 +36,6 @@ recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
 # Need to fix this
 opt = Options(dt_comp=dt)
 
-# 
 F = judiModeling(model; options=opt)
 
 # Setup operators
@@ -46,7 +44,7 @@ A = judiPhoto(F, recGeometry;)
 # Photoacoustic source distribution
 init_dist = zeros(Float32, n)
 init_dist[div(n[1],2), div(n[2],2)] = 1
-p = judiPhotoSource(init_dist);
+p = judiInitialState(init_dist);
 
 dsim = A*p
 p_adj = A'*dsim

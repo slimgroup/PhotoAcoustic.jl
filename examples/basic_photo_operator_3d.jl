@@ -1,5 +1,4 @@
 using PhotoAcoustic
-using JUDI
 using Statistics, LinearAlgebra, PyPlot
 
 function plot_3d_mip(p_array, title_plt;dx=0.0678f0, vmin_po=0, vmax_po=nothing)
@@ -82,14 +81,14 @@ A = judiPhoto(F, recGeometry;)
 # Photoacoustic point source distribution
 init_dist = zeros(Float32, n)
 init_dist[div(n[1],2), div(n[2],2), div(n[3],2)] = 1
-p = judiPhotoSource(init_dist);
+p = judiInitialState(init_dist);
 
 dsim = A*p
 p_adj = A'*dsim
 
 #################################### plotting results #########################################
 
-data_extent = (0, nxrec, time, 0)
+data_extent = (0, nyrec, time, 0)
 model_extent = (0,(n[1]-1)*d[1],(n[2]-1)*d[2],0)
 
 vmax_data = quantile(abs.(vec(dsim.data[1])), 98/100)
@@ -99,7 +98,3 @@ savefig("gt_3d.png"); close(fig);
 
 fig = plot_3d_mip(p_adj.data[1], "Adjoint solution";)
 savefig("adj_3d.png"); close(fig);
-
-
-
-
