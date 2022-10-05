@@ -1,5 +1,4 @@
 using PhotoAcoustic
-using JUDI
 using Statistics, LinearAlgebra, PyPlot
 
 # Set up model structure

@@ -1,8 +1,5 @@
-using PhotoAcoustic
-using JUDI, LinearAlgebra, PyPlot
-using Statistics
-using DrWatson
-using IterativeSolvers
+using PhotoAcoustic, LinearAlgebra, PyPlot
+using Statistics, IterativeSolvers
 
 # Set up model structure
 n = (80, 80)   # (x,z)
@@ -91,6 +88,3 @@ imshow(d_pred.data[1];extent=data_extent,cmap="seismic", aspect=15, vmin=-vmax_d
 xlabel("Receiver index"); ylabel("Time [microseconds]");; colorbar()
 
 tight_layout()
-fig_name = @strdict maxiters 
-safesave(savename(fig_name; digits=6)*"_lsqr.png", fig); #close(fig)
-

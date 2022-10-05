@@ -45,3 +45,13 @@ jobs:
 
       - name: Run tests
         uses: julia-actions/julia-runtest@latest
+
+      - name: Install Examples packages
+        run: |
+          julia -e 'using Pkg;Pkg.add(["Statistics", "LinearAlgebra", "PyPlot", "IterativeSolvers"])'
+
+      - name: Rune examples
+        run: |
+          julia --color=yes --project examples/basic_photo_operator_2d.jl
+          julia --color=yes --project examples/basic_photo_operator_3d.jl
+          julia --color=yes --project examples/least_squares.jl

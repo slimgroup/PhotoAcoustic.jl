@@ -5,6 +5,13 @@ struct judiInitialStateProjection{D} <: judiNoopOperator{D}
     n::AbstractSize
 end
 
+"""
+    judiInitialStateProjection(model)
+
+Construct the projection operator that sets the initial state into the wavefield for propagation.
+This operator is a No-op operation that will propagate a [`judiInitialState`](@ref) if combined with a JUDI
+propagator.
+"""
 judiInitialStateProjection(model) = judiInitialStateProjection{eltype(model.m)}(space(model.n), time_space(model.n))
 
 struct judiPhoto{D, O} <: judiComposedPropagator{D, O}

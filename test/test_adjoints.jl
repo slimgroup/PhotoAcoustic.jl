@@ -1,5 +1,3 @@
-using PhotoAcoustic, LinearAlgebra, Test, Printf
-
 # Set up model structure
 n = (80, 80)   # (x,y,z) or (x,z)
 d = (0.08f0, 0.08f0)
