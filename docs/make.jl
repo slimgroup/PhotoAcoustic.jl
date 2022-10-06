@@ -5,7 +5,7 @@ makedocs(sitename="Photoacoustic imaging in Julia",
          authors="Rafael Orozco and Mathias Louboutin",
          pages = Any[
              "Home" => "index.md",
-             "Tutorials" => ["LearnedPrior.md"]
+             "Tutorials" => ["LSQR.md", "LearnedPrior.md"]
          ])
 
 deploydocs(repo="github.com/slimgroup/PhotoAcoustic.jl", devbranch="main")
