@@ -8,7 +8,8 @@ using PyPlot
 using ChainRulesCore
 using Statistics
 using LinearAlgebra
-using Images</code></pre><h2 id="Define-a-neural-network"><a class="docs-heading-anchor" href="#Define-a-neural-network">Define a neural network</a><a id="Define-a-neural-network-1"></a><a class="docs-heading-anchor-permalink" href="#Define-a-neural-network" title="Permalink"></a></h2><pre><code class="language-julia">struct UNet
+using Images</code></pre><pre><code class="language-none">┌ Info: Precompiling PhotoAcoustic [86b14aa7-fcb7-4836-b4c7-056f45a9c77b]
+└ @ Base loading.jl:1662</code></pre><h2 id="Define-a-neural-network"><a class="docs-heading-anchor" href="#Define-a-neural-network">Define a neural network</a><a id="Define-a-neural-network-1"></a><a class="docs-heading-anchor-permalink" href="#Define-a-neural-network" title="Permalink"></a></h2><pre><code class="language-julia">struct UNet
     layers::NamedTuple
 end</code></pre><pre><code class="language-julia">&quot;&quot;&quot;
 User Facing API for UNet architecture.
@@ -97,10 +98,11 @@ recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=1)
 # Setup operators
 opt = Options(dt_comp=dt)
 F = judiModeling(model; options=opt)
-A = judiPhoto(F, recGeometry;)</code></pre><pre><code class="language-none">JUDI forward{Float32} propagator (z * x) -&gt; (src * rec * time)</code></pre><h2 id="Get-model-x"><a class="docs-heading-anchor" href="#Get-model-x">Get model x</a><a id="Get-model-x-1"></a><a class="docs-heading-anchor-permalink" href="#Get-model-x" title="Permalink"></a></h2><pre><code class="language-julia">xtrain, ytrain = MLDatasets.MNIST(:train)[:]
-x = judiPhotoSource(imresize(xtrain[:,:,1], (n[1], n[2])))</code></pre><pre><code class="language-none">judiPhotoSource{Float32} with 1 sources</code></pre><h1 id="Make-observed-data"><a class="docs-heading-anchor" href="#Make-observed-data">Make observed data</a><a id="Make-observed-data-1"></a><a class="docs-heading-anchor-permalink" href="#Make-observed-data" title="Permalink"></a></h1><pre><code class="language-julia">y = A*x
-imshow(y.data[1];aspect=&quot;auto&quot;)</code></pre><pre><code class="language-none">Operator `photoacoustic_forward` ran in 0.08 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_12_1.png" alt="png"/></p><pre><code class="language-none">PyObject &lt;matplotlib.image.AxesImage object at 0x19a96d190&gt;</code></pre><h2 id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator"><a class="docs-heading-anchor" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator">Add rrule for chainfules to know how to differentiate the photoacoustic operator</a><a id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator-1"></a><a class="docs-heading-anchor-permalink" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator" title="Permalink"></a></h2><pre><code class="language-julia">function ChainRulesCore.rrule(::typeof(*), A::T, x) where {T&lt;:judiPhoto}
-    y = A*judiPhotoSource(x)
+A = judiPhoto(F, recGeometry;)</code></pre><pre><code class="language-none">JUDI forward{Float32} propagator (z * x) -&gt; (src * rec * time)</code></pre><h2 id="Get-model-x"><a class="docs-heading-anchor" href="#Get-model-x">Get model x</a><a id="Get-model-x-1"></a><a class="docs-heading-anchor-permalink" href="#Get-model-x" title="Permalink"></a></h2><pre><code class="language-julia">xtrain, ytrain = MNIST.traindata(Float32)
+x = judiInitialState(imresize(xtrain[:,:,1], (n[1], n[2])))</code></pre><pre><code class="language-none">judiInitialState{Float32} with 1 sources</code></pre><h1 id="Make-observed-data"><a class="docs-heading-anchor" href="#Make-observed-data">Make observed data</a><a id="Make-observed-data-1"></a><a class="docs-heading-anchor-permalink" href="#Make-observed-data" title="Permalink"></a></h1><pre><code class="language-julia">y = A*x
+imshow(y.data[1];aspect=&quot;auto&quot;)</code></pre><pre><code class="language-none">Building forward operator
+Operator `forward` ran in 0.01 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_12_1.png" alt="png"/></p><pre><code class="language-none">PyObject &lt;matplotlib.image.AxesImage object at 0x2b4df58e0&gt;</code></pre><h2 id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator"><a class="docs-heading-anchor" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator">Add rrule for chainfules to know how to differentiate the photoacoustic operator</a><a id="Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator-1"></a><a class="docs-heading-anchor-permalink" href="#Add-rrule-for-chainfules-to-know-how-to-differentiate-the-photoacoustic-operator" title="Permalink"></a></h2><pre><code class="language-julia">function ChainRulesCore.rrule(::typeof(*), A::T, x) where {T&lt;:judiPhoto}
+    y = A*judiInitialState(x)
     pullback(Δy) = (NoTangent(), NoTangent(), expand_dims_rev((A&#39;*Δy).data[1]))
     return y, pullback
 end
@@ -108,57 +110,7 @@ end
     norm(A*model(z) - y).^2
 end</code></pre><pre><code class="language-none">model_loss (generic function with 1 method)</code></pre><h2 id="Training-Hyperparameters"><a class="docs-heading-anchor" href="#Training-Hyperparameters">Training Hyperparameters</a><a id="Training-Hyperparameters-1"></a><a class="docs-heading-anchor-permalink" href="#Training-Hyperparameters" title="Permalink"></a></h2><pre><code class="language-julia">device = cpu          # only works on cpu right now
 lr = 5e-3             # learning rate
-epochs = 100           # number of epochs</code></pre><pre><code class="language-none">100</code></pre><pre><code class="language-julia">for i in 28:64  
-    try unet(randn(Float32, i, i, 1, 1))
-    catch
-         println(&quot;error at $(i)&quot;)
-    end
-end
-    
-    
-36
-44
-52
-60
-68
-76</code></pre><pre><code class="language-none">error at 29
-error at 30
-error at 31
-error at 32
-error at 33
-error at 34
-error at 35
-error at 37
-error at 38
-error at 39
-error at 40
-error at 41
-error at 42
-error at 43
-error at 45
-error at 46
-error at 47
-error at 48
-error at 49
-error at 50
-error at 51
-error at 53
-error at 54
-error at 55
-error at 56
-error at 57
-error at 58
-error at 59
-error at 61
-error at 62
-error at 63
-error at 64
-
-
-
-
-
-76</code></pre><pre><code class="language-julia"># initialize UNet model
+epochs = 200           # number of epochs</code></pre><pre><code class="language-none">200</code></pre><pre><code class="language-julia"># initialize UNet model
 unet = UNet() |&gt; device
 
 # initialize input to model. This is not a trainable parameter 
@@ -186,12 +138,12 @@ for epoch = 1:epochs
 end</code></pre><pre><code class="language-none">┌ Warning: ProgressMeter by default refresh meters with additional information in IJulia via `IJulia.clear_output`, which clears all outputs in the cell. 
 │  - To prevent this behaviour, do `ProgressMeter.ijulia_behavior(:append)`. 
 │  - To disable this warning message, do `ProgressMeter.ijulia_behavior(:clear)`.
-└ @ ProgressMeter /Users/rafaelorozco/.julia/packages/ProgressMeter/sN2xr/src/ProgressMeter.jl:618
-[32mProgress: 100%|█████████████████████████████████████████| Time: 0:05:34[39m
-[34m  loss:  0.039336037[39m</code></pre><h2 id="Show-training-log"><a class="docs-heading-anchor" href="#Show-training-log">Show training log</a><a id="Show-training-log-1"></a><a class="docs-heading-anchor-permalink" href="#Show-training-log" title="Permalink"></a></h2><pre><code class="language-julia">subplot(1,2,1); title(&quot;Least squares objective&quot;)
-plot(loss_log; );
+└ @ ProgressMeter /Users/mathiaslouboutin/.julia/packages/ProgressMeter/sN2xr/src/ProgressMeter.jl:618
+[32mProgress: 100%|█████████████████████████████████████████| Time: 0:01:21[39m
+[34m  loss:  0.011968669[39m</code></pre><h2 id="Show-training-log"><a class="docs-heading-anchor" href="#Show-training-log">Show training log</a><a id="Show-training-log-1"></a><a class="docs-heading-anchor-permalink" href="#Show-training-log" title="Permalink"></a></h2><pre><code class="language-julia">subplot(1,2,1); title(&quot;Least squares objective&quot;)
+semilogx(loss_log; );
 subplot(1,2,2);title(&quot;Error&quot;)
-plot(error_log; );</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_23_0.png" alt="png"/></p><h2 id="Plot-our-results"><a class="docs-heading-anchor" href="#Plot-our-results">Plot our results</a><a id="Plot-our-results-1"></a><a class="docs-heading-anchor-permalink" href="#Plot-our-results" title="Permalink"></a></h2><pre><code class="language-julia">fig = figure(figsize=(8,4))
+semilogx(error_log; );</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_22_0.png" alt="png"/></p><h2 id="Plot-our-results"><a class="docs-heading-anchor" href="#Plot-our-results">Plot our results</a><a id="Plot-our-results-1"></a><a class="docs-heading-anchor-permalink" href="#Plot-our-results" title="Permalink"></a></h2><pre><code class="language-julia">fig = figure(figsize=(8,4))
 subplot(2,3,1); title(&quot;Ground truth x&quot;)
 imshow(x.data[1][:,:,1,1]&#39;; vmin=0,vmax = 1); colorbar()
 subplot(2,3,2); title(&quot;Deep prior estimation G(z)&quot;)
@@ -202,9 +154,9 @@ imshow(unet(z)[:,:,1,1]&#39; - x.data[1][:,:,1,1]&#39;; cmap = &quot;seismic&quo
 subplot(2,3,4); title(&quot;Observed data y&quot;)
 imshow(y.data[1];aspect=&quot;auto&quot;); colorbar()
 subplot(2,3,5); title(&quot;Simulated data A*G(z)&quot;)
-imshow((A*judiPhotoSource(unet(z))).data[1];aspect=&quot;auto&quot;); colorbar() 
+imshow((A*judiInitialState(unet(z))).data[1];aspect=&quot;auto&quot;); colorbar() 
 subplot(2,3,6); title(&quot;Data residual&quot;)
-imshow((A*judiPhotoSource(unet(z))).data[1] - y.data[1];aspect=&quot;auto&quot;,cmap = &quot;seismic&quot;, vmin=-0.1, vmax = 0.1);  colorbar() 
+imshow((A*judiInitialState(unet(z))).data[1] - y.data[1];aspect=&quot;auto&quot;,cmap = &quot;seismic&quot;, vmin=-0.1, vmax = 0.1);  colorbar() 
 
-tight_layout()</code></pre><pre><code class="language-none">Operator `photoacoustic_forward` ran in 0.09 s
-Operator `photoacoustic_forward` ran in 0.09 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_25_1.png" alt="png"/></p><pre><code class="language-julia"></code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 5 October 2022 17:33">Wednesday 5 October 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+tight_layout()</code></pre><pre><code class="language-none">Operator `forward` ran in 0.01 s
+Operator `forward` ran in 0.01 s</code></pre><p><img src="../LearnedPrior_files/LearnedPrior_24_1.png" alt="png"/></p><pre><code class="language-julia"></code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 6 October 2022 13:17">Thursday 6 October 2022</span>. Using Julia version 1.8.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
