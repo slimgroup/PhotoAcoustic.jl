@@ -66,7 +66,7 @@ function propagate(J::judiPhoto{T, :forward}, q::AbstractArray{T}) where {T}
     # Set up Python model structure
     modelPy = devito_model(J.F.model, J.F.options)
     dtComp  = convert(Float32, modelPy."critical_dt")
-    nt = floor(Int, recGeometry.t[1] / dtComp) + 1
+    nt = length(0:dtComp:((recGeometry.nt[1]-1)*recGeometry.dt[1]))
 
     # Set up coordinates
     rec_coords = setup_grid(recGeometry, J.F.model.n)    # shifts rec coordinates by origin

@@ -1,7 +1,7 @@
 name = "PhotoAcoustic"
 uuid = "86b14aa7-fcb7-4836-b4c7-056f45a9c77b"
 authors = ["rafaelorozco <rao9787@gmail.com>", "Mathias Louboutin <mathias.louboutin@gmail.com"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 JUDI = "f3b833dc-6b2e-5b9c-b940-873ed6319979"
