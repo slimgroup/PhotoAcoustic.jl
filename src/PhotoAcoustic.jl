@@ -4,6 +4,8 @@ module PhotoAcoustic
 using LinearAlgebra, Reexport
 @reexport using JUDI
 
+PhotoAcoustic_path = dirname(pathof(PhotoAcoustic))
+
 using JUDI.DSP, JUDI.PyCall
 
 import Base: getindex, *, copy!, copyto!, similar
@@ -14,9 +16,13 @@ import LinearAlgebra: adjoint
 const impl = PyNULL()
 
 function __init__()
-    pushfirst!(PyVector(pyimport("sys")."path"),dirname(pathof(PhotoAcoustic)))
+    pushfirst!(PyVector(pyimport("sys")."path"),PhotoAcoustic_path)
     copy!(impl, pyimport("implementation"))
 end
+
+# utility for data loading 
+
+PhotoAcoustic_data = joinpath(PhotoAcoustic_path, "../data")
 
 # Sources
 include("judiInitialState.jl")
