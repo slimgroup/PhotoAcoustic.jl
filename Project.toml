@@ -4,6 +4,7 @@ authors = ["rafaelorozco <rao9787@gmail.com>", "Mathias Louboutin <mathias.loubo
 version = "0.2.0"
 
 [deps]
+IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
 JUDI = "f3b833dc-6b2e-5b9c-b940-873ed6319979"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -15,8 +16,8 @@ Reexport = "1"
 julia = "1.6"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "Printf"]
