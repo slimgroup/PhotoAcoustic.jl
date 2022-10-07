@@ -1,6 +1,9 @@
 using PhotoAcoustic
 
 using LinearAlgebra, Test, Printf
+
+include("./runtests.jl")
+
 # Set up model structure
 n = (80, 80)   # (x,y,z) or (x,z)
 d = (0.08f0, 0.08f0)
@@ -9,13 +12,16 @@ o = (0., 0.)
 # Constant water velocity [mm/microsec]
 v = 1.5f0*ones(Float32,n)
 v[:, 41:end] .= 2f0
+v0 = 1f0 .* v
+v0[:, 41:end] .= 1.85f0
 m = (1f0 ./ v).^2
-dm = zeros(Float32, n...)
-dm[:, 40] .= .01f0
+m0 = (1f0 ./ v0).^2
+dm = m .- m0
 
 # Setup model structure
 nsrc = 1	# number of sources
 model = Model(n, d, o, m;)
+model0 = Model(n, d, o, m0;)
 
 # Set up receiver geometry
 nxrec = 64
@@ -24,12 +30,12 @@ yrec = [0f0]
 zrec = range(0, stop=0, length=nxrec)
 
 # receiver sampling and recording time
-time = 5.2333 #[microsec] 
+time = 5f0 #[microsec] 
 
 # receiver sampling interval [microsec] 
 # On the order of 10nanoseconds which 
 # is similar to hauptmans 16.6ns
-dt = 0.01
+dt = 0.01f0
 
 # Set up receiver structure
 recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
@@ -38,43 +44,45 @@ recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
 tol = 5f-4
 maxtry = 3
 
-######## Copy paste from JUDI, should reorganize JUDI so can just be imported
+# Options
+opt = Options(sum_padding=true, dt_comp=dt)
 
-function run_adjoint(F, q, y, dm; test_F=true, test_J=true)
-    adj_F, adj_J = !test_F, !test_J
-    if test_F
-        # Forward-adjoint
-        d_hat = F*q
-        q_hat = F'*y
+@testset "Jacobian test" begin
+    w = zeros(Float32, model.n...)
+    w[35:45, 35:45] .= randn(Float32, 11, 11)
+    w = judiInitialState(w)
+    # Setup operators
+    F = judiPhoto(model, recGeometry; options=opt)
+    F0 = judiPhoto(model0, recGeometry; options=opt)
+    J = judiJacobian(F0, w)
 
-        # Result F
-        a = dot(y, d_hat)
-        b = dot(q, q_hat)
-        @printf(" <F x, y> : %2.5e, <x, F' y> : %2.5e, relative error : %2.5e ratio : %2.5e \n", a, b, (a - b)/(a + b), a/b)
-        adj_F = isapprox(a/(a+b), b/(a+b), atol=tol, rtol=0)
-    end
+    # Linear modeling
+    dobs = F*w
+    dD = J*vec(dm)
 
-    if test_J
-        # Linearized modeling
-        J = judiJacobian(F, q)
-        ld_hat = J*dm
-        dm_hat = J'*y
-
-        c = dot(ld_hat, y)
-        d = dot(dm_hat, dm)
-        @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e ratio : %2.5e \n", c, d, (c - d)/(c + d), c/d)
-        adj_J = isapprox(c/(c+d), d/(c+d), atol=tol, rtol=0)
-    end
-    return adj_F, adj_J
+    # Gradient test
+    grad_test(x-> F(;m=x)*w, m0, dm, dD; data=true)
 end
 
-test_adjoint(f::Bool, j::Bool, last::Bool) = (test_adjoint(f, last), test_adjoint(j, last))
-test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip adj)
+@testset "FWI gradient test" begin
+    w = zeros(Float32, model.n...)
+    w[35:45, 35:45] .= randn(Float32, 11, 11)
+    w = judiInitialState(w)
+    # Setup operators
+    F = judiPhoto(model, recGeometry; options=opt)
+    dobs = F*w
 
-# Photoacoustic operator
+    # Background operators
+    F0 = judiPhoto(model0, recGeometry; options=opt)
+    J = judiJacobian(F0, w)
+
+	# Check get same misfit as l2 misifit on forward data
+	grad = J'*(F0*w - dobs)
+
+	grad_test(x-> .5f0*norm(F(;m=x)*w - dobs)^2, model0.m, dm, grad)
+end
+
 @testset "Photoacoustic  adjoint test with constant background" begin
-  
-    opt = Options(sum_padding=true)
     F = judiModeling(model; options=opt)
     Pr = judiProjection(recGeometry)
     I = judiInitialStateProjection(model)
@@ -84,7 +92,8 @@ test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip 
     A2 = Pr*F*I'
     A3 = judiPhoto(model, recGeometry; options=opt)
 
-    w = rand(Float32, model.n...)
+    w = zeros(Float32, model.n...)
+    w[35:45, 35:45] .= randn(Float32, 11, 11)
     w = judiInitialState(w)
 
     # Nonlinear modeling

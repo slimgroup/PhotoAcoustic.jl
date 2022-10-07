@@ -94,9 +94,8 @@ function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObjec
 
     args = isnothing(init) ? (modelPy, qIn, rec_coords) : (modelPy, qIn, rec_coords, init_dist)
     g = pycall(op, PyArray, args..., space_order=J.F.options.space_order, freq_list=nothing)
-    #println(size(g))
-    g = remove_padding(g, modelPy.padsizes; true_adjoint=(J.options.sum_padding && ~isnothing(init)))
 
+    g = remove_padding(g, modelPy.padsizes; true_adjoint=(J.options.sum_padding && ~isnothing(init)))
     return g
 end
 
