@@ -9,10 +9,10 @@ $$\frac{1}{c(x)^2}\frac{\partial^2}{\partial t^2}u(x,t) - \nabla^2 u(x,t) = 0$$
 
 where the source is instead defined in the initial state:
 ```math
-\begin{align}
+\begin{aligned}
 u(x,0) &= p_0 \\
 \dot u(x,0) &= 0.
-\end{align}
+\end{aligned}
 ```
 
 The spatial distribution $p_0$ is the initial acoustic source caused by the photonic impulse and is the parameter of interest when performing inversion. 
@@ -22,19 +22,19 @@ The derivation is based on procedure and notation from [PDE-constrained optimiza
 
 $$\underset{p_0}{\operatorname{min}} \, \, F(u,p_0) \, \,  \mathrm{where} \, \, F(u,p_0) = \int_{0}^{T}f(u,t)dt = \frac{1}{2} \sum_{r=1}^{R} \int_{0}^{T}\left|| u_{r}(t) - d_{r}(t)\right||_{2}^{2}dt$$
 ```math
-\begin{align}
+\begin{aligned}
 \text{subject to} \, \, \ddot u &= m\nabla^2 u\\
 u(0) &= p_0 \\
 \dot u(0) &= 0. 
-\end{align}
+\end{aligned}
 ```
 Where we have set $m=\frac{1}{c(x)^2}$ to be the slowness squared. For ease of derivation of writing the Lagrangian, we will assign functions to each of these three constraints:
 ```math
-\begin{align}
+\begin{aligned}
  h(\ddot u,p_0,t) &= m\nabla^2 u\\
 g(u(0),p_0) &= u(0) - p_0 = 0 \\
 k(\dot u(0)) &= \dot u(0) = 0
-\end{align}
+\end{aligned}
 ```
 In order to solve the minimization problem, our goal is to obtain the sensitivity of our functional $F$ with respect to the variable $p_0$:
 
@@ -46,13 +46,13 @@ $$d_{p_0}F = d_{p_0}L = \int_{0}^{T}[\partial_{p_0}f - \lambda^{\top}\partial_{p
 
 Where the notation $\partial_{p_0}f$ means the Jacobian of $f$ with respect to $p_0$ and $[\cdot]^{-1}$ is the matrix inverse. Lets simplify the expression by noting the following equalities:
 ```math
-\begin{align}
+\begin{aligned}
 \partial_{p_0}f &= 0 \\
 \partial_{p_0}h &= 0 \\
 [\partial_{u(0)}g]^{-1} &= -I \\
 \partial_{p_0}g  &= I \\
 \partial_{p_0}k &= 0
-\end{align}
+\end{aligned}
 ```
 giving the total derivative:
 
@@ -65,10 +65,10 @@ $$\ddot \lambda = \partial_{u}h^{\top}\lambda  -\partial_{u}f^{\top}  \, \, \rig
 
 Note that this is the same wave equation as the forward model but with a source term given by the residual $-\partial_{u}f^{\top}$and it is solved in reverse time (from $t=T$ to $t=0$) with the "initial" state:
 ```math
-\begin{align}
+\begin{aligned}
  \lambda(T)^{\top} &= 0 \\
 \dot \lambda(T)^{\top} &= 0
-\end{align}
+\end{aligned}
 ```
 
 ## Jacobian derivation
