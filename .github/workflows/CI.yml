@@ -14,6 +14,11 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    env:
+      DEVITO_ARCH: gcc-9
+      DEVITO_LANGUAGE: "openmp"
+      DEVITO_LOGGING: "ERROR"
+      OMP_NUM_THREADS: 2
 
     strategy:
       fail-fast: false
@@ -42,6 +47,10 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+
+      - name: Install GCC 9
+        if : runner.os == 'macOS'
+        run : brew install gcc@9
 
       - name: Run tests
         uses: julia-actions/julia-runtest@latest

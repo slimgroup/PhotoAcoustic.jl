@@ -25,7 +25,7 @@ d_sim = A*p
 
 A complete runnable script with the above example is [here](https://github.com/slimgroup/PhotoAcoustic.jl/blob/main/examples/basic_photo_operator_2d.jl)
 
-In order to solve photoacoustic inverse problems in a variational framework, we also need the adjoint photoacoustic operator ``A^{\top}``. In this package, we [derive](https://slimgroup.github.io/PhotoAcoustic.jl/dev/derivations/ and implement the adjoint). The operator can be accessed with simple linear algebra notation: 
+In order to solve photoacoustic inverse problems in a variational framework, we also need the adjoint photoacoustic operator ``A^{\top}``. In this package, we [derive](https://slimgroup.github.io/PhotoAcoustic.jl/dev/derivations/) and implement the adjoint. The operator can be accessed with simple linear algebra notation: 
 ```Julia
 # Forward simulation
 d_sim = A*p
