@@ -81,20 +81,19 @@ def adjointbornis(model, y, rcv_coords, init_dist, **kwargs):
     """
     nt = y.shape[0]
     born_fwd = kwargs.get('born_fwd', False)
-    rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt, **kwargs)
+    rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
+                                     save=True, **kwargs)
 
-    kwargs['return_op'] = True
     kwargs.pop('freq_list', None)
-    op, g, kwg = gradient(model, -y, rcv_coords, u, **kwargs)
+    kwargs['return_op'] = True
+    op, g, kwg = gradient(model, y, rcv_coords, u, save=True, **kwargs)
     op(**kwg)
 
-    # Need the extra v[0].dt * m
-    # v = kwg['v']
-    # Correct for default scaling in injection
-    # mrm = model.m * model.irho
-    # from IPython import embed; embed()
-    # op = Operator(Eq(g, g / mrm))
-    # op(dt=model.critical_dt, time_m=0, time_M=0)
+    # Need the intergation by part correction since we compute the gradient on
+    # u * v.dt (see Documentation)
+    v = kwg['v']
+    op = Operator(Eq(g, g - v.dt*u))
+    op(dt=model.critical_dt, time_m=0, time_M=0)
 
     return g.data
 

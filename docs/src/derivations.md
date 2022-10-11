@@ -86,7 +86,15 @@ We derive the sensitivity with repect to the square slowness in a similar fation
 
 
 ```math
-    d_{m}F = - \int_{0}^{T} \lambda^{\top} \ddot u
+    d_{m}F = - \int_{0}^{T} \lambda^{\top} \ddot u dt
 ```
 
-where $\lambda$ is the solution of the same adjoint equation derived for the sensitivity with respect to the photoacoustic source.
+where $\lambda$ is the solution of the same adjoint equation derived for the sensitivity with respect to the photoacoustic source. Note that unlike the source excitation case (i.e point source in [JUDI]) this is not strictly equivalent to $\ddot \lambda^{\top} u$ due to the intial state. Because JUDI computes $- \int_{0}^{T} \ddot \lambda^{\top} u dt$ the following correction is needed:
+
+
+```math
+\begin{aligned}
+    d_{m}F &= - \int_{0}^{T} \lambda^{\top} \ddot u dt =  - \int_{0}^{T}  \ddot \lambda^{\top} u dt  + \lambda(0)  \dot u (0) - \dot \lambda(0) u(0) \\
+    &=  - \int_{0}^{T}  \ddot \lambda^{\top} u dt - \dot \lambda(0) p_0
+\end{aligned}
+```

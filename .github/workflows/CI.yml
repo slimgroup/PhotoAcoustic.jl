@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout PhotoAcoustic
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup julia
         uses: julia-actions/setup-julia@v1

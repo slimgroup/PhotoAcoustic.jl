@@ -30,6 +30,7 @@ Arguments
 judiInitialState(source::Vector{Array{T, N}}) where {T<:Number, N} = judiInitialState{T}(length(source), source)
 judiInitialState(source::Array{T, N}) where {T<:Number, N} = judiInitialState([source])
 judiInitialState(source::Array{T, N}, nsrc::Integer) where {T<:Number, N} = judiInitialState([source for s=1:nsrc])
+judiInitialState(x::judiInitialState) = x
 
 ############################################################
 # JOLI conversion

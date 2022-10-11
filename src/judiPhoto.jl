@@ -66,7 +66,7 @@ function _forward_prop(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObject; dm
     nt = length(0:dtComp:recGeometry.t[1])
 
     # Set up coordinates
-    rec_coords = setup_grid(recGeometry, J.F.model.n)    # shifts rec coordinates by origin
+    rec_coords = setup_grid(recGeometry, J.F.model.n)
 
     # Devito interface
     dsim = wrapcall_data(op, modelPy, rec_coords, init_dist, nt, space_order=J.F.options.space_order)
@@ -87,7 +87,7 @@ function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObjec
     dtComp  = convert(Float32, modelPy."critical_dt")
 
     # Set up coordinates
-    rec_coords = setup_grid(recGeometry, J.F.model.n)    # shifts rec coordinates by origin
+    rec_coords = setup_grid(recGeometry, J.F.model.n)
 
     # Extrapolate input data to computational grid     
     qIn = time_resample(srcData, recGeometry, dtComp)[1]

@@ -2,8 +2,6 @@ using PhotoAcoustic
 
 using LinearAlgebra, Test, Printf
 
-include("./runtests.jl")
-
 # Set up model structure
 n = (80, 80)   # (x,y,z) or (x,z)
 d = (0.08f0, 0.08f0)
@@ -25,9 +23,9 @@ model0 = Model(n, d, o, m0;)
 
 # Set up receiver geometry
 nxrec = 64
-xrec = range(0, stop=d[1]*(n[1]-1), length=nxrec)
+xrec = range(0.08f0, stop=d[1]*(n[1]-2), length=nxrec)
 yrec = [0f0]
-zrec = range(0, stop=0, length=nxrec)
+zrec = range(0.08f0, stop=0.08f0, length=nxrec)
 
 # receiver sampling and recording time
 time = 5f0 #[microsec] 
@@ -45,19 +43,21 @@ tol = 5f-4
 maxtry = 3
 
 # Options
-opt = Options(sum_padding=true, dt_comp=dt)
+opt = Options(sum_padding=true)
+w = zeros(Float32, model.n...)
+w[35:45, 35:45] .= 1f0.+ randn(Float32, 11, 11)
+w = judiInitialState(w)
+
+F = judiPhoto(model, recGeometry; options=opt)
+dobs = F*w
 
 @testset "Jacobian test" begin
-    w = zeros(Float32, model.n...)
-    w[35:45, 35:45] .= randn(Float32, 11, 11)
-    w = judiInitialState(w)
+
     # Setup operators
-    F = judiPhoto(model, recGeometry; options=opt)
     F0 = judiPhoto(model0, recGeometry; options=opt)
     J = judiJacobian(F0, w)
 
     # Linear modeling
-    dobs = F*w
     dD = J*vec(dm)
 
     # Gradient test
@@ -65,13 +65,6 @@ opt = Options(sum_padding=true, dt_comp=dt)
 end
 
 @testset "FWI gradient test" begin
-    w = zeros(Float32, model.n...)
-    w[35:45, 35:45] .= randn(Float32, 11, 11)
-    w = judiInitialState(w)
-    # Setup operators
-    F = judiPhoto(model, recGeometry; options=opt)
-    dobs = F*w
-
     # Background operators
     F0 = judiPhoto(model0, recGeometry; options=opt)
     J = judiJacobian(F0, w)
@@ -83,18 +76,14 @@ end
 end
 
 @testset "Photoacoustic  adjoint test with constant background" begin
-    F = judiModeling(model; options=opt)
+    Ainv = judiModeling(model; options=opt)
     Pr = judiProjection(recGeometry)
     I = judiInitialStateProjection(model)
 
 	# Setup operators
-	A = judiPhoto(F, recGeometry)
-    A2 = Pr*F*I'
+	A = judiPhoto(Ainv, recGeometry)
+    A2 = Pr*Ainv*I'
     A3 = judiPhoto(model, recGeometry; options=opt)
-
-    w = zeros(Float32, model.n...)
-    w[35:45, 35:45] .= randn(Float32, 11, 11)
-    w = judiInitialState(w)
 
     # Nonlinear modeling
     y = A*w

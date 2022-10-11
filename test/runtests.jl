@@ -2,7 +2,6 @@ using PhotoAcoustic
 
 using LinearAlgebra, Test, Printf
 
-
 ######## Copy paste from JUDI, should reorganize JUDI so can just be imported
 test_adjoint(f::Bool, j::Bool, last::Bool) = (test_adjoint(f, last), test_adjoint(j, last))
 test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip adj)
@@ -58,9 +57,9 @@ function grad_test(misfit, x0, dx, g; maxiter=6, h0=5f-2, data=false, stol=1f-1)
 
     rate1 = err1[1:end-1]./err1[2:end]
     rate2 = err2[1:end-1]./err2[2:end]
-    # @test isapprox(mean(rate1), 1.25f0; atol=stol)
-    # @test isapprox(mean(rate2), 1.5625f0; atol=stol)
+    @test isapprox(mean(rate1), 1.25f0; atol=stol)
+    @test isapprox(mean(rate2), 1.5625f0; atol=stol)
 end
 
 
-# include("test_adjoints.jl")
+include("test_sensitivities.jl")
