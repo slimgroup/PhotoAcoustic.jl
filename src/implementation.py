@@ -26,7 +26,13 @@ def forwardis(model, rcv_coords, init_dist, nt, **kwargs):
 
     summary = op(**kw)
 
-    return rcv, u, summary
+    # Check wich wavefield is wanted as output
+    t_sub = kwargs.get('t_sub', 0)
+    dft = kwargs.get('freq_list', None) is not None
+    dft_modes = (kw['ufr%s' % u.name], kw['ufi%s' % u.name]) if dft else None
+    us = (kw['us_u'] if t_sub > 1 else u)
+    us.data[0] = np.array(init_dist)
+    return rcv, dft_modes or us, summary
 
 
 def forwardis_data(*args, **kwargs):
@@ -75,25 +81,29 @@ def adjointis(model, y, rcv_coords, **kwargs):
     return init.data
 
 
-def adjointbornis(model, y, rcv_coords, init_dist, **kwargs):
+def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list=None,
+                  t_sub=None, **kwargs):
     """
     Adjoint photoacoustic propagator.
     """
     nt = y.shape[0]
     born_fwd = kwargs.get('born_fwd', False)
     rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
-                                     save=True, **kwargs)
+                                     save=freq_list is None, freq_list=freq_list,
+                                     t_sub=t_sub, **kwargs)
 
-    kwargs.pop('freq_list', None)
+    # Get operator
     kwargs['return_op'] = True
-    op, g, kwg = gradient(model, y, rcv_coords, u, save=True, **kwargs)
+    op, g, kwg = gradient(model, y, rcv_coords, u, save=freq_list is None, freq=freq_list,
+                          **kwargs)
     op(**kwg)
 
     # Need the intergation by part correction since we compute the gradient on
     # u * v.dt (see Documentation)
-    v = kwg['v']
-    op = Operator(Eq(g, g - v.dt*u))
-    op(dt=model.critical_dt, time_m=0, time_M=0)
+    if freq_list is None:
+        v = kwg['v']
+        op = Operator(Eq(g, g - v.dt*u))
+        op(dt=model.critical_dt, time_m=0, time_M=0)
 
     return g.data
 

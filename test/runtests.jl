@@ -2,64 +2,65 @@ using PhotoAcoustic
 
 using LinearAlgebra, Test, Printf
 
-######## Copy paste from JUDI, should reorganize JUDI so can just be imported
-test_adjoint(f::Bool, j::Bool, last::Bool) = (test_adjoint(f, last), test_adjoint(j, last))
-test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip adj)
+using TimerOutputs: TimerOutputs, @timeit
 
-mean(x) = sum(x)/length(x)
+# Collect timing and allocations information to show in a clear way.
+const TIMEROUTPUT = TimerOutputs.TimerOutput()
+timeit_include(path::AbstractString) = @timeit TIMEROUTPUT path include(path)
 
-function run_adjoint(F, q, y, dm; test_F=true, test_J=true)
-    adj_F, adj_J = !test_F, !test_J
-    if test_F
-        # Forward-adjoint
-        d_hat = F*q
-        q_hat = F'*y
-
-        # Result F
-        a = dot(y, d_hat)
-        b = dot(q, q_hat)
-        @printf(" <F x, y> : %2.5e, <x, F' y> : %2.5e, relative error : %2.5e ratio : %2.5e \n", a, b, (a - b)/(a + b), b/a)
-        adj_F = isapprox(a/(a+b), b/(a+b), atol=tol, rtol=0)
-    end
-
-    if test_J
-        # Linearized modeling
-        J = judiJacobian(F, q)
-        ld_hat = J*dm
-        dm_hat = J'*y
-
-        c = dot(ld_hat, y)
-        d = dot(dm_hat, dm)
-        @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e ratio : %2.5e \n", c, d, (c - d)/(c + d), d/c)
-        adj_J = isapprox(c/(c+d), d/(c+d), atol=tol, rtol=0)
-    end
-    return adj_F, adj_J
-end
-
-function grad_test(misfit, x0, dx, g; maxiter=6, h0=5f-2, data=false, stol=1f-1)
-    # init
-    err1 = zeros(Float32, maxiter)
-    err2 = zeros(Float32, maxiter)
-    
-    gdx = data ? g : dot(g, dx)
-    f0 = misfit(x0)
-    h = h0
-
-    @printf("%11.5s, %11.5s, %11.5s, %11.5s, %11.5s, %11.5s \n", "h", "h * gdx", "e1", "e2", "rate1", "rate2")
-    for j=1:maxiter
-        f = misfit(x0 + h*dx)
-        err1[j] = norm(f - f0, 1)
-        err2[j] = norm(f - f0 - h*gdx, 1)
-        j == 1 ? prev = 1 : prev = j - 1
-        @printf("%5.5e, %5.5e, %5.5e, %5.5e, %5.5e, %5.5e \n", h, h*norm(gdx, 1), err1[j], err2[j], err1[prev]/err1[j], err2[prev]/err2[j])
-        h = h * .8f0
-    end
-
-    rate1 = err1[1:end-1]./err1[2:end]
-    rate2 = err2[1:end-1]./err2[2:end]
-    @test isapprox(mean(rate1), 1.25f0; atol=stol)
-    @test isapprox(mean(rate2), 1.5625f0; atol=stol)
-end
+include("utils.jl")
 
 
+##### Setup model, ... for test
+
+
+# Set up model structure
+n = (80, 80)   # (x,y,z) or (x,z)
+d = (0.08f0, 0.08f0)
+o = (0., 0.)
+
+# Constant water velocity [mm/microsec]
+v = 1.5f0*ones(Float32,n)
+v[:, 41:end] .= 2f0
+v0 = 1f0 .* v
+v0[:, 41:end] .= 1.85f0
+m = (1f0 ./ v).^2
+m0 = (1f0 ./ v0).^2
+
+# Setup model structure
+nsrc = 1	# number of sources
+model = Model(n, d, o, m;)
+model0 = Model(n, d, o, m0;)
+dm = model.m - model0.m
+
+# Set up receiver geometry
+nxrec = 64
+xrec = range(0.08f0, stop=d[1]*(n[1]-2), length=nxrec)
+yrec = [0f0]
+zrec = range(0.08f0, stop=0.08f0, length=nxrec)
+
+# receiver sampling and recording time
+time = 5f0 #[microsec] 
+
+# receiver sampling interval [microsec] 
+# On the order of 10nanoseconds which 
+# is similar to hauptmans 16.6ns
+dt = 0.01f0
+f0 = 1/0.08
+
+# Set up receiver structure
+recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
+
+w = zeros(Float32, model.n...)
+w[35:45, 35:45] .= 1f0.+ randn(Float32, 11, 11)
+w = judiInitialState(w)
+
+
+
+#####  Run tests
+
+include("test_all_options.jl")
 include("test_sensitivities.jl")
+
+# Testing memory and runtime summary
+show(TIMEROUTPUT; compact=true, sortby=:firstexec)
