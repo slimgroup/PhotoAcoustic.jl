@@ -52,9 +52,8 @@ f0 = 1/0.08
 recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time, nsrc=nsrc)
 
 w = zeros(Float32, model.n...)
-w[35:45, 35:45] .= 1f0.+ randn(Float32, 11, 11)
+w[35:45, 35:45] .= 1f0.+ rand(Float32, 11, 11)
 w = judiInitialState(w)
-
 
 
 #####  Run tests

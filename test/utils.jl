@@ -1,5 +1,3 @@
-
-
 ######## Copy paste from JUDI, should reorganize JUDI so can just be imported
 test_adjoint(f::Bool, j::Bool, last::Bool) = (test_adjoint(f, last), test_adjoint(j, last))
 test_adjoint(adj::Bool, last::Bool) = (adj || last) ? (@test adj) : (@test_skip adj)

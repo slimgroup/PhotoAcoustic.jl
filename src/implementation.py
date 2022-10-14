@@ -64,11 +64,13 @@ def bornis_data(*args, **kwargs):
     return bornis(*args, **kwargs)[0].data
 
 
-def adjointis(model, y, rcv_coords, **kwargs):  
+def adjointis(model, y, rcv_coords, **kwargs):
     """
     Adjoint photoacoustic propagator.
     """
     kwargs.pop('checkpointing', None)
+    kwargs.pop('t_sub', None)
+    kwargs.pop('isic', None)
     # Make dt source
     rcv, v, summary = adjoint(model, -y, None, rcv_coords, **kwargs)
 
@@ -102,7 +104,7 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     # u * v.dt (see Documentation)
     if freq_list is None:
         w = model.irho * model.m if kwargs.get('isic', False) else model.irho
-        op0 = Operator(Eq(g, g - w * kwg['v'].dt * u))
+        op0 = Operator(Eq(g, g -  w * kwg['v'].dt * u))
         op0(dt=model.critical_dt, time_m=0, time_M=0)
 
     return g.data
