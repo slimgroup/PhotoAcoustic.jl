@@ -93,7 +93,7 @@
         ##################################subsampling#################################################
         printstyled("Testing subsampling \n"; color = :red)
         @timeit TIMEROUTPUT "Subsampling" begin
-                fs = rand([true, false])
+                fs = false#rand([true, false])
                 opt = Options(sum_padding=true, free_surface=fs, subsampling_factor=4, f0=f0)
                 F = judiPhoto(model0, recGeometry; options=opt)
 

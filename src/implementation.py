@@ -27,10 +27,10 @@ def forwardis(model, rcv_coords, init_dist, nt, **kwargs):
     summary = op(**kw)
 
     # Check wich wavefield is wanted as output
-    t_sub = kwargs.get('t_sub', 0)
     dft = kwargs.get('freq_list', None) is not None
     dft_modes = (kw['ufr%s' % u.name], kw['ufi%s' % u.name]) if dft else None
-    us = (kw['us_u'] if t_sub > 1 else u)
+    us = kw['us_u'] if kwargs.get('t_sub', 0) > 1 else u
+    # Reset initial condition in case we have a buffered `u` that needs to be reused
     us.data[0] = np.array(init_dist)
     return rcv, dft_modes or us, summary
 
@@ -68,6 +68,7 @@ def adjointis(model, y, rcv_coords, **kwargs):
     """
     Adjoint photoacoustic propagator.
     """
+    kwargs.pop('checkpointing', None)
     # Make dt source
     rcv, v, summary = adjoint(model, -y, None, rcv_coords, **kwargs)
 
@@ -82,7 +83,7 @@ def adjointis(model, y, rcv_coords, **kwargs):
 
 
 def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list=None,
-                  t_sub=None, **kwargs):
+                  t_sub=1, **kwargs):
     """
     Adjoint photoacoustic propagator.
     """
@@ -91,7 +92,6 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
                                      save=freq_list is None, freq_list=freq_list,
                                      t_sub=t_sub, **kwargs)
-
     # Get operator
     kwargs['return_op'] = True
     op, g, kwg = gradient(model, y, rcv_coords, u, save=freq_list is None, freq=freq_list,
@@ -101,9 +101,9 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     # Need the intergation by part correction since we compute the gradient on
     # u * v.dt (see Documentation)
     if freq_list is None:
-        v = kwg['v']
-        op = Operator(Eq(g, g - v.dt*u))
-        op(dt=model.critical_dt, time_m=0, time_M=0)
+        w = model.irho * model.m if kwargs.get('isic', False) else model.irho
+        op0 = Operator(Eq(g, g - w * kwg['v'].dt * u))
+        op0(dt=model.critical_dt, time_m=0, time_M=0)
 
     return g.data
 
