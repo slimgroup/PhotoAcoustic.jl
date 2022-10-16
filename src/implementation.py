@@ -1,4 +1,4 @@
-from devito import Operator, Function, Eq
+from devito import Operator, Function, Eq, Inc
 from devito.tools import as_tuple
 
 import numpy as np
@@ -94,6 +94,9 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
                                      save=freq_list is None, freq_list=freq_list,
                                      t_sub=t_sub, **kwargs)
+    # Illumination
+    illum = Function(name="illum", grid=model.grid, space_order=0)
+    Operator(Inc(illum, model.critical_dt * u * u))()
     # Get operator
     kwargs['return_op'] = True
     op, g, kwg = gradient(model, y, rcv_coords, u, save=freq_list is None, freq=freq_list,
@@ -104,9 +107,9 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     # u * v.dt (see Documentation)
     if freq_list is None:
         w = model.irho * model.m if kwargs.get('isic', False) else model.irho
-        op0 = Operator(Eq(g, g -  w * kwg['v'].dt * u))
+        op0 = Operator([Eq(g, g -  w * kwg['v'].dt * u), Eq(g, g*illum/(illum*illum + 1e-6))])
         op0(dt=model.critical_dt, time_m=0, time_M=0)
-
+    
     return g.data
 
 op_fwd_JIS = {False: forwardis, True: bornis}
