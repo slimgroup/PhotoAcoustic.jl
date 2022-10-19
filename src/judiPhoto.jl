@@ -70,7 +70,7 @@ function _forward_prop(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObject; dm
 
     # Devito interface
     dsim = wrapcall_data(op, modelPy, rec_coords, init_dist, nt, space_order=J.F.options.space_order,
-                         isic=J.F.options.isic)
+                         ic=J.F.options.IC)
     dsim = time_resample(dsim, dtComp, recGeometry)
 
     # Output shot record as judiVector
@@ -99,7 +99,7 @@ function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObjec
     length(options.frequencies) == 0 ? freqs = nothing : freqs = options.frequencies
 
     g = pycall(op, PyArray, args..., space_order=J.F.options.space_order, freq_list=freqs,
-               checkpointing=options.optimal_checkpointing, isic=options.isic,
+               checkpointing=options.optimal_checkpointing, ic=options.IC,
                dft_sub=options.dft_subsampling_factor[1], t_sub=options.subsampling_factor)
 
     g = remove_padding(g, modelPy.padsizes; true_adjoint=(J.options.sum_padding && ~isnothing(init)))
