@@ -68,6 +68,13 @@ plot_path = "plots/dm"
 
 @load "data/breast_2d.jld2" v rho p0
 d = (0.08f0, 0.08f0)
+<<<<<<< HEAD
+=======
+
+p0, dnew = PA_upscale(p0, d[1])
+v = imresize(v, size(p0))
+rho = imresize(rho, size(rho))
+>>>>>>> 9cec2c4 (fwi imaging condition)
 
 p0, dnew = PA_upscale(p0, d[1])
 v = imresize(v, size(p0))

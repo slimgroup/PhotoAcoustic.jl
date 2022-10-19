@@ -104,7 +104,7 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     # u * v.dt (see Documentation)
     if freq_list is None:
         w = model.irho if kwargs.get('ic', "as") == "as" else model.irho * model.m
-        op0 = Operator(Eq(g, g -  w * kwg['v'].dt * u))
+        op0 = Operator([Eq(g, g -  w * kwg['v'].dt * u), Eq(g, g*illum/(illum*illum + 1e-6))])
         op0(dt=model.critical_dt, time_m=0, time_M=0)
     
     return g.data
