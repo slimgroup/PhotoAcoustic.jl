@@ -28,6 +28,9 @@ PhotoAcoustic_data = joinpath(PhotoAcoustic_path, "../data")
 include("judiInitialState.jl")
 # Operators
 include("judiPhoto.jl")
+# Utilities
+include("utils/utilities.jl")
+
 
 end # module
 
