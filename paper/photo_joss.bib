@@ -1,0 +1,18 @@
+
+@article{orozco2022memory,
+  title={Memory Efficient Invertible Neural Networks for 3D Photoacoustic Imaging},
+  author={Orozco, Rafael and Louboutin, Mathias and Herrmann, Felix J},
+  journal={arXiv preprint arXiv:2204.11850},
+  year={2022}
+}
+
+@unpublished {orozco2022SPIEadjoint,
+  title = {Adjoint operators enable fast and amortized machine learning based Bayesian uncertainty quantification},
+  year = {2022},
+  note = {Submitted to SPIE},
+  month = {08},
+  abstract = {Machine learning algorithms such as Normalizing Flows, VAEs, and GANs are powerful tools in Bayesian uncertainty quantification (UQ) of inverse problems. Unfortunately, when using these algorithms medical imaging practitioners are faced with the challenging task of manually defining neural networks that can handle complicated inputs such as acoustic data. This task needs to be replicated for different receiver types or configurations since these change the dimensionality of the input. We propose to first transform the data using the adjoint operator {\textemdash}ex: time reversal in photoacoustic imaging (PAI) or back-projection in computer tomography (CT) imaging {\textemdash} then continue posterior inference using the adjoint data as an input now that it has been standardized to the size of the unknown model. This adjoint preprocessing technique has been used in previous works but with minimal discussion on if it is biased. In this work, we prove that conditioning on adjoint data is unbiased for a certain class of inverse problems. We then demonstrate with two medical imaging examples (PAI and CT) that adjoints enable two things: Firstly, adjoints partially undo the physics of the forward operator resulting in faster convergence of an ML based Bayesian UQ technique. Secondly, the algorithm is now robust to changes in the observed data caused by differing transducer subsampling in PAI and number of angles in CT. Our adjoint-based Bayesian inference method results in point estimates that are faster to compute than traditional baselines and show higher SSIM metrics, while also providing validated UQ.},
+  keywords = {Amortized Inference, Bayesian inference, deep learning, Inverse problems, machine learning, medical imaging, Normalizing flows, Uncertainty quantification},
+  url = {https://slim.gatech.edu/Publications/Public/Submitted/2022/orozco2022SPIEadjoint/SPIE_2022_adjoint.html},
+  author = {Rafael Orozco and Ali Siahkoohi and Gabrio Rizzuti and Tristan van Leeuwen and Felix J. Herrmann}
+}
