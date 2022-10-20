@@ -30,6 +30,7 @@ Arguments
 judiInitialState(source::Vector{Array{T, N}}) where {T<:Number, N} = judiInitialState{T}(length(source), source)
 judiInitialState(source::Array{T, N}) where {T<:Number, N} = judiInitialState([source])
 judiInitialState(source::Array{T, N}, nsrc::Integer) where {T<:Number, N} = judiInitialState([source for s=1:nsrc])
+judiInitialState(x::judiInitialState) = x
 
 ############################################################
 # JOLI conversion
@@ -45,3 +46,4 @@ end
 
 copyto!(jv::judiInitialState, jv2::judiInitialState) = copy!(jv, jv2)
 getindex(a::judiInitialState{T}, srcnum::RangeOrVec) where T = judiInitialState{T}(length(srcnum), a.data)
+make_input(q::judiInitialState, model::Model, options::JUDIOptions) = pad_array(q.data[1], pad_sizes(model, options; so=0); mode=:zeros)
