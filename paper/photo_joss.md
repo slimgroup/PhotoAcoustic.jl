@@ -19,13 +19,13 @@ authors:
 affiliations:
  - name: Georgia Institute of Technology, USA
    index: 1
-date: 20 september 2020
+date: 20 September 2020
 bibliography: photo_joss.bib
 
 ---
 
 # Summary
-Photoacoustic imaging is a medical imaging modality that shows great promise as novel technique for reconstruction high resolution images of clinically relevant structures in subtissue. Clinal applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and realtime blood oxigenation measurements. This modality is relatively new so development of efficient reconstruction procedures is still an active field. Efficient development of new photoacoustic reconstruction procedures requires two things. A user friendly interface for accelerated prototyping and efficient simulations of the underlyining physical models. We aim to deliver a package that can satisfy both of these needs. 
+Photoacoustic imaging is a medical imaging modality that shows promise as a novel technique for reconstructing high resolution images of clinically relevant structures in sub tissue. Clinical applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and real-time blood oxygenation measurements. This modality is relatively new so development of efficient reconstruction procedures is still an active field. Efficient development of new photoacoustic reconstruction procedures requires two things. A user-friendly interface for accelerated prototyping and efficient simulations of the underlining physical models. We aim to deliver a package that can satisfy both of these needs. 
 
 <!-- This is the example summary:
 The forces on stars, galaxies, and dark matter under external gravitational
@@ -43,11 +43,11 @@ performing numerical orbit integration).
 # Statement of need
 `PhotoAcoustic.jl` is a Julia package that is based on previous software work (JUDI and Devito). 
 Devito provides just-in-time compiled C kernels for efficient wave simulations. While JUDI gives access to 
-a user friendly interface to operators that represent the wave simulations. By taking advantage of this previous software and adding photoacoustic domain specific operators and functionality such as ultrasound transducers, `PhotoAcoustic.jl` is the first Julia package to simulate photoacoustic experiments and also solve optimization problems for photoacoustic image reconstruction. 
+a user-friendly interface to operators that represent the wave simulations. By taking advantage of this previous software and adding photoacoustic domain specific operators and functionality such as ultrasound transducers, `PhotoAcoustic.jl` is the first Julia package to simulate photoacoustic experiments and also solve optimization problems for photoacoustic image reconstruction. 
 
 
-# Adjoint derivations for optimization
-We implement the photoacoustic as the solution to a partial differential equation:
+## Adjoint derivations for optimization
+We implement the photoacoustic simulation as the solution to a partial differential equation:
 
 $$\frac{1}{c(x)^2}\frac{\partial^2}{\partial t^2}u(x,t) - \nabla^2 u(x,t) = 0$$
 
@@ -59,8 +59,8 @@ u(x,0) &= p_0 \\
 \end{aligned}
 $$
 
-Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic operator with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation of its kind for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
-efficient computation and user friendly notation i.e the adjoint of the operator A is simply `A'` or `adjoint(A)`.
+Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation of its kind for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
+efficient computation and user-friendly notation i.e the adjoint of the operator A is simply `A'` or `adjoint(A)`.
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
@@ -133,5 +133,6 @@ DO WE NEED TO SAY ML4 seismic here?
 
 
 # References
+
 
 
