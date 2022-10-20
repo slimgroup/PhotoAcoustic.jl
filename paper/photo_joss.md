@@ -25,9 +25,9 @@ bibliography: photo_joss.bib
 ---
 
 # Summary
-Photoacoustic imaging is a medical imaging modality that shows great promise as novel technique for reconstruction high resolution images of clinically relevant structures in subtissue. Clinal applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and realtime blood oxigenation measurements. This modality is relatively new so development of efficient reconstruction procedures is still an active field. Efficient development of new photoacoustic reconstruction procedures requires two things. A user friendly interface for accelerated prototyping and efficient simulations of the underlyining physical models.
+Photoacoustic imaging is a medical imaging modality that shows great promise as novel technique for reconstruction high resolution images of clinically relevant structures in subtissue. Clinal applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and realtime blood oxigenation measurements. This modality is relatively new so development of efficient reconstruction procedures is still an active field. Efficient development of new photoacoustic reconstruction procedures requires two things. A user friendly interface for accelerated prototyping and efficient simulations of the underlyining physical models. We aim to deliver a package that can satisfy both of these needs. 
 
-This is the example summary:
+<!-- This is the example summary:
 The forces on stars, galaxies, and dark matter under external gravitational
 fields lead to the dynamical evolution of structures in the universe. The orbits
 of these bodies are therefore key to understanding the formation, history, and
@@ -37,6 +37,8 @@ is now well-established, commonly taught, and frequently used in astronomy.
 Aside from toy problems and demonstrations, the majority of problems require
 efficient numerical tools, many of which require the same base code (e.g., for
 performing numerical orbit integration).
+ -->
+
 
 # Statement of need
 `PhotoAcoustic.jl` is a Julia package that is based on previous software work (JUDI and Devito). 
@@ -66,7 +68,7 @@ in [orozco2022SPIEadjoint] to study the uncertainty of photoacoustic reconstruct
 that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 
 
-
+<!-- 
 This is the example Statement of need:
 `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
 enables wrapping low-level languages (e.g., C) for speed without losing
@@ -124,6 +126,7 @@ and referenced from text using \autoref{fig:example}.
 
 Figure sizes can be customized by adding an optional second parameter:
 ![Caption for example figure.](figure.png){ width=20% }
+ -->
 
 # Acknowledgements
 DO WE NEED TO SAY ML4 seismic here? 
