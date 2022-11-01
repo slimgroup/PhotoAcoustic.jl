@@ -51,20 +51,18 @@ We implement the photoacoustic simulation as the solution to a partial different
 
 $$\frac{1}{c(x)^2}\frac{\partial^2}{\partial t^2}u(x,t) - \nabla^2 u(x,t) = 0$$
 
-where the photoacoustic source $p_0$ is defined in the initial state:
-$$
+where the photoacoustic source $p_0$ is defined in the initial state of the field:
 \begin{aligned}
 u(x,0) &= p_0 \\
 \dot u(x,0) &= 0.
 \end{aligned}
-$$
 
 Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation of its kind for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
 efficient computation and user-friendly notation i.e the adjoint of the operator A is simply `A'` or `adjoint(A)`.
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
-in [orozco2022SPIEadjoint] to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions [@orozco2022memory]. There is also ongoing work 
+in bOrozco:2022  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions aOrozco:2022\. There is also ongoing work 
 that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 
 
