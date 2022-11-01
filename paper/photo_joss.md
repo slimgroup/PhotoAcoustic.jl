@@ -62,7 +62,7 @@ efficient computation and user-friendly notation i.e the adjoint of the operator
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
-in bOrozco:2022  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions aOrozco:2022\. There is also ongoing work 
+in `[@aOrozco:2022]`  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions `[@bOrozco:2022]`\. There is also ongoing work 
 that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 
 
