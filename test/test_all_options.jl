@@ -1,6 +1,8 @@
 # Author: Mathias Louboutin, mlouboutin3@gatech.edu
 # Date: October 2022
 
+_is_legal(x::T) where T<:Number = !isnan(x) && (x != 0)
+
 @testset "Gradient options test" begin
         ##################################ISIC########################################################
         printstyled("Testing isic \n"; color = :red)
@@ -21,9 +23,9 @@
                 d = dot(dm, x_hat1)
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
                 @test isapprox(c, d, rtol=5f-2)
-                @test !isnan(norm(y0))
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat1))
+                @test _is_legal(norm(y0))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat1))
         end
 
         ##################################checkpointing###############################################
@@ -44,8 +46,8 @@
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
                 @test isapprox(c, d, rtol=1f-2)
 
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat2))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat2))
         end
 
         ##################################DFT#########################################################
@@ -65,8 +67,8 @@
                 c = dot(y0, y_hat)
                 d = dot(dm, x_hat3)
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat3))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat3))
         end
 
         ################################## DFT time subsampled#########################################
@@ -86,8 +88,8 @@
                 c = dot(y0, y_hat)
                 d = dot(dm, x_hat3)
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat3))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat3))
         end
 
         ##################################subsampling#################################################
@@ -106,8 +108,8 @@
                 c = dot(y0, y_hat)
                 d = dot(dm, x_hat4)
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat3))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat3))
         end
         ##################################ISIC + DFT #########################################################
         printstyled("Testing isic+dft \n"; color = :red)
@@ -126,7 +128,7 @@
                 c = dot(y0, y_hat)
                 d = dot(dm, x_hat5)
                 @printf(" <J x, y> : %2.5e, <x, J' y> : %2.5e, relative error : %2.5e \n", c, d, c/d - 1)
-                @test !isnan(norm(y_hat))
-                @test !isnan(norm(x_hat5))
+                @test _is_legal(norm(y_hat))
+                @test _is_legal(norm(x_hat5))
         end
 end

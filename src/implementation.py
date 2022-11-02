@@ -1,4 +1,4 @@
-from devito import Operator, Function, Eq, Inc
+from devito import Operator, Function, Eq, Inc, norm
 from devito.tools import as_tuple
 
 import numpy as np
@@ -17,8 +17,8 @@ def forwardis(model, rcv_coords, init_dist, nt, **kwargs):
     op, u, rcv, kw = forward(model, None, rcv_coords, np.zeros((nt,)), **kwargs)
 
     # Set the first two entries of wavefield to spatial distribution init_dist
-    u.data[0] = np.array(init_dist)
-    u.data[1] = np.array(init_dist)
+    u.data[0, :] = init_dist[:]
+    u.data[1, :] = init_dist[:]
 
     if return_op:
         return op, u, rcv, kw
@@ -48,15 +48,15 @@ def bornis(model, rcv_coords, init_dist, nt, **kwargs):
     op, u, rcv, kw = born(model, None, rcv_coords, np.zeros((nt,)), **kwargs)
 
     # Set the first two entries of wavefield to spatial distribution init_dist
-    u.data[0] = np.array(init_dist)
-    u.data[1] = np.array(init_dist)
+    u.data[0, :] = init_dist[:]
+    u.data[1, :] = init_dist[:]
 
     if return_op:
         return op, u, rcv, kw
 
-    summary = op(**kw)
+    op(**kw)
 
-    return rcv, u, summary
+    return rcv, u
 
 
 def bornis_data(*args, **kwargs):
@@ -71,7 +71,7 @@ def adjointis(model, y, rcv_coords, **kwargs):
     kwargs.pop('t_sub', None)
     kwargs.pop('ic', None)
     # Make dt source
-    rcv, v, summary = adjoint(model, -y, None, rcv_coords, **kwargs)
+    rcv, v = adjoint(model, -y, None, rcv_coords, **kwargs)[:2]
 
     # Extract time derivative at 0.
     init = Function(name="ini", grid=model.grid, space_order=0)

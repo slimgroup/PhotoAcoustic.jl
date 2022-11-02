@@ -37,7 +37,7 @@ dm = model.m - model0.m
 nxrec = 64
 xrec = range(0.08f0, stop=d[1]*(n[1]-2), length=nxrec)
 yrec = [0f0]
-zrec = range(0.08f0, stop=0.08f0, length=nxrec)
+zrec = range(0.32f0, stop=0.32f0, length=nxrec)
 
 # receiver sampling and recording time
 time = 5f0 #[microsec] 

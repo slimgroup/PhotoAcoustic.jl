@@ -12,56 +12,6 @@ using FFTResampling
 using DSP
 using FFTW
 
-function circle_geom(h, k, r, numpoints)
-    #h and k are the center coords
-    #r is the radius
-    theta = LinRange(0f0, 2*pi, numpoints+1)[1:end-1]
-    Float32.(h .- r*cos.(theta)), Float32.(k .+ r*sin.(theta)), theta
-end
-
-function make_calcifications(v;x=100,z=100,spread=80, n=20)
-    #make n calcifications centered around x,y with a certain spread
-    normal_two_dim = MvNormal(vec([x z]), Diagonal(spread*ones(2)))
-    norm_coords =convert(Array{Int64,2},round.(rand(normal_two_dim, n)))
-    norm_coords_x = norm_coords[1,:]
-    norm_coords_z = norm_coords[2,:]
-    for i in 1:n
-        #use random size and location to place "microcalcification" of high velocity
-        box_size_x = rand(0:2)
-        box_size_z = rand(0:2)
-        v[x+norm_coords_x[i]:x+norm_coords_x[i]+box_size_x, z+norm_coords_z[i]:z+norm_coords_z[i]+box_size_z] .= 3.43203 
-    end
-    v
-end
-
-function PA_upscale(p0, dx_orig, upsample_fact=1.25; pad_a=16)
-	p0_zeropad = collect(padarray(p0, Fill(0,(pad_a,pad_a),(pad_a,pad_a))));
-	Nx_orig = size(p0_zeropad)[1]
-	x       = dx_orig*(Nx_orig - 1)
-	dx_up   = Float32(dx_orig/upsample_fact)
-	Nx_up   = ceil(Int, x/dx_up)
-
-	###################Smooth Iniital pressure distribution by upsampling and also blackman smooth
-	#upsample p0 in FFT space
-	p0_up = FFTResampling.resample(p0_zeropad, (Nx_up, Nx_up), true; boundary_handling=false)
-
-	#smooth p0 using blackman filter
-	window = Float32.(blackman(Nx_orig; padding=0));
-	window2d = window*window';
-
-	pad = (Nx_up-Nx_orig)÷2
-
-	window_padded = collect(padarray(window2d, Fill(0,(pad,pad),(pad,pad))));
-
-	p0_up_smooth = real.(ifft(fft(p0_up) .* ifftshift(window_padded)));
-	p0_up_smooth = p0_up_smooth / maximum(p0_up_smooth);
-	
-	zero_pad = Int(upsample_fact*pad_a)
-	p0_up_smooth = p0_up_smooth[zero_pad+1:end-zero_pad,zero_pad+1:end-zero_pad]
-
-    return p0_up_smooth, dx_up
-end
-
 import DrWatson: _wsave
 _wsave(s, fig::Figure) = fig.savefig(s, bbox_inches="tight", dpi=300)
 plot_path = "plots/dm"
@@ -69,14 +19,13 @@ plot_path = "plots/dm"
 @load "data/breast_2d.jld2" v rho p0
 d = (0.08f0, 0.08f0)
 
-p0, dnew = PA_upscale(p0, d[1])
+p0, d = blackman_upscale(p0, d)
 v = imresize(v, size(p0))
 rho = imresize(rho, size(rho))
 
 mask = v .== v[1,1]
 # Set up model structure
 n = size(v) # (x,y,z) or (x,z)
-d = (dnew, dnew)
 o = (0., 0.)
 
 #Make background model with original v but without calcifications
@@ -97,7 +46,7 @@ nxrec = 256
 domain_x = (n[1] - 1)*d[1]
 domain_z = (n[2] - 1)*d[2]
 rad = .95*domain_x / 2
-xrec, zrec, theta = circle_geom(domain_x / 2, domain_z / 2, rad, nxrec)
+xrec, zrec, theta = circle_geometry((domain_x / 2, domain_z / 2), rad, nxrec)
 yrec = 0f0 #2d so always 0
 
 # receiver sampling and recording time
@@ -122,12 +71,6 @@ F = judiModeling(model; options=opt)
 A = judiPhoto(F, recGeometry;)
 
 # Photoacoustic source distribution
-
-#make single vessel 
-#p0_single = 0f0 .* p0
-#p0_single[425:444,117:123] .= p0[425:444,117:123]
-#p = judiInitialState(p0_single);
-
 p = judiInitialState(p0);
 
 

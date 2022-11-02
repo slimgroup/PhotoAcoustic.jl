@@ -57,6 +57,9 @@ end
         @test y ≈ y2
         @test y ≈ y3
 
+        # Zero input
+        @test norm(A*(0 .* w)) == 0
+
         # Run test until succeeds in case of bad case
         adj_F, adj_J = false, false
         ntry = 0

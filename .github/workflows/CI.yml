@@ -18,7 +18,7 @@ jobs:
       DEVITO_ARCH: gcc-9
       DEVITO_LANGUAGE: "openmp"
       DEVITO_LOGGING: "ERROR"
-      OMP_NUM_THREADS: 2
+      OMP_NUM_THREADS: 1
 
     strategy:
       fail-fast: false

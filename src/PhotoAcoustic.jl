@@ -6,11 +6,15 @@ using LinearAlgebra, Reexport
 
 PhotoAcoustic_path = dirname(pathof(PhotoAcoustic))
 
-using JUDI.DSP, JUDI.PyCall
+using JUDI.DSP, JUDI.PyCall, JUDI.FFTW, JUDI.JOLI
+using FFTResampling
 
-import Base: getindex, *, copy!, copyto!, similar
-import JUDI: judiMultiSourceVector, judiComposedPropagator, judiPropagator, judiNoopOperator, jAdjoint, Projection
-import JUDI: RangeOrVec, make_input, propagate, zero, process_input_data, wrapcall_data
+import Base: getindex, *, copy!, copyto!, similar, getproperty, display
+import JUDI: judiMultiSourceVector, judiComposedPropagator, judiPropagator, judiNoopOperator
+import JUDI: judiDataModeling, judiModeling, jAdjoint, Projection, judiVector, Geometry
+import JUDI: RangeOrVec, make_input, propagate, zero, process_input_data, setup_grid
+import JUDI: wrapcall_data, wrapcall_function
+import JUDI: time_resample, make_src, get_nsrc, post_process
 import LinearAlgebra: adjoint
 
 const impl = PyNULL()
@@ -24,10 +28,14 @@ end
 
 PhotoAcoustic_data = joinpath(PhotoAcoustic_path, "../data")
 
+# Utilities
+include("utils.jl")
 # Sources
 include("judiInitialState.jl")
 # Operators
 include("judiPhoto.jl")
+# Transducer
+include("transducer.jl")
 
 end # module
 
