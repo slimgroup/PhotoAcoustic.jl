@@ -25,7 +25,7 @@ bibliography: photo_joss.bib
 ---
 
 # Summary
-Photoacoustic imaging is a medical imaging modality that shows promise as a novel technique for reconstructing high resolution images of clinically relevant structures in subtissue. Clinical applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and real-time blood oxygenation measurements. This modality is relatively new thus development of efficient reconstruction algorithms is still an active field. Efficient development of new photoacoustic reconstruction algorithms requires two things. A user-friendly interface for accelerated prototyping and efficient simulations of the underlining physical models. We aim to deliver a package that can satisfy both of these needs. 
+Photoacoustic imaging is a medical imaging modality that shows promise as a novel technique for reconstructing high resolution images of clinically relevant structures in subtissue. Clinical applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and real-time blood oxygenation measurements. This modality is relatively new thus development of efficient reconstruction algorithms is still an active field. Efficient development of new photoacoustic reconstruction algorithms requires two things. A user-friendly interface for accelerated prototyping and efficient simulations of the underlying physical models. We aim to deliver a package that can satisfy both of these needs. Further, we aim to further the field of scientific machine learning by supporting end-to-end differentiability of the physics operators chained with learned machine learming models. 
 
 <!-- This is the example summary:
 The forces on stars, galaxies, and dark matter under external gravitational
@@ -47,7 +47,7 @@ a user-friendly interface to operators that represent the wave simulations. By t
 
 
 ## Adjoint derivations for optimization
-We implement the photoacoustic simulation as the solution to a partial differential equation:
+We implement the photoacoustic simulation as the solution to a initial value partial differential equation:
 
 $$\frac{1}{c(x)^2}\frac{\partial^2}{\partial t^2}u(x,t) - \nabla^2 u(x,t) = 0$$
 
@@ -57,11 +57,11 @@ u(x,0) &= p_0 \\
 \dot u(x,0) &= 0.
 \end{align}$$
 
-Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
-efficient computation and user-friendly notation i.e the adjoint of the operator A is simply `A'` or `adjoint(A)`.
+Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is used to reconstruct images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
+efficient computation and user-friendly notation i.e the adjoint of the photoacoustic operator `A` is simply `A'` or `adjoint(A)`.
 
 ## Differentiable programming 
-This package has first class differentiability to support developments in scientific machine learning. Previous works such as (cite ADCME.jl) rely on wrapper calls to PyTorch for autodiff. In this package, we manually implement adjoint rules that allows to chain physics derivatives with pure julia differentiation of machine learning models. To illustrate this, we implement the deep image prior by reparameterizing the image of interest as the output of a deep convolutional neural network (Unet) with minimal lines:
+This package has first class differentiability to support developments in scientific machine learning. Similar packages such as (cite ADCME.jl) rely on wrapper calls to PyTorch for autograd. In this package, we manually implement adjoint rules that allows to chain physics derivatives with pure Julia autograd of machine learning models. To illustrate this, we implement the deep image prior by reparameterizing the image of interest as the output of a deep convolutional neural network (UNet) with minimal coding effort:
 
     loss, grad = Flux.withgradient(z) do
         norm(A*unet(z)-y)^2
@@ -71,10 +71,12 @@ This package has first class differentiability to support developments in scient
 ![Least squares estimate with deep image prior given by convolutional neural network.](figs/_dip.png){ width=20% }
 ![Ground truth image. Receivers located at top of model at red points.](figs/_gt.png){ width=20% }
 
+The optimization results show that the smoothness bias of the convolutional neural network aids in focusing vessels that are out view of the receiver geometry. Pure physics methods such as the least squares solution shown struggle to image these vessels. 
+
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
-in `[@aOrozco:2022]`  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions `[@bOrozco:2022]`\. There is also ongoing work that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
+in [@aOrozco:2022]  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions @bOrozco:2022\. There is also ongoing work that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 <!-- 
 This is the example Statement of need:
 `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
