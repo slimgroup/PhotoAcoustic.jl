@@ -6,6 +6,7 @@ tags:
   - medical imaging
   - PDE constrained optimization 
   - adjoint sensitivity 
+  - scientific machine learning
 authors:
   - name: Rafael Orozco 
     orcid: 0000-0000-0000-0000
@@ -52,10 +53,10 @@ We implement the photoacoustic simulation as the solution to a initial value par
 $$\frac{1}{c(x)^2}\frac{\partial^2}{\partial t^2}u(x,t) - \nabla^2 u(x,t) = 0$$
 
 where the photoacoustic source $p_0$ is defined in the initial state of the field:
-$$\begin{align}
+\begin{aligned}
 u(x,0) &= p_0 \\
 \dot u(x,0) &= 0.
-\end{align}$$
+\end{aligned}
 
 Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is used to reconstruct images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
 efficient computation and user-friendly notation i.e the adjoint of the photoacoustic operator `A` is simply `A'` or `adjoint(A)`.
@@ -68,7 +69,7 @@ This package has first class differentiability to support developments in scient
     end
 
 ![Least squares estimate with no prior.](figs/_no_dip.png){ width=20% }
-![Least squares estimate with deep image prior given by convolutional neural network.](figs/_dip.png){ width=20% }
+![Least squares estimate with deep image prior given by convolutional neural network.](figs/_dip.png | width=20){ width=20% }
 ![Ground truth image. Receivers located at top of model at red points.](figs/_gt.png){ width=20% }
 
 The optimization results show that the smoothness bias of the convolutional neural network aids in focusing vessels that are out view of the receiver geometry. Pure physics methods such as the least squares solution shown struggle to image these vessels. 
@@ -76,7 +77,7 @@ The optimization results show that the smoothness bias of the convolutional neur
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
-in [@aOrozco:2022]  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions @bOrozco:2022\. There is also ongoing work that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
+in [@aOrozco:2022]  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions [@bOrozco:2022]\. There is also ongoing work that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 <!-- 
 This is the example Statement of need:
 `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
