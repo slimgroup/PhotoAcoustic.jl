@@ -19,13 +19,13 @@ authors:
 affiliations:
  - name: Georgia Institute of Technology, USA
    index: 1
-date: 20 September 2020
+date: 20 September 2022
 bibliography: photo_joss.bib
 
 ---
 
 # Summary
-Photoacoustic imaging is a medical imaging modality that shows promise as a novel technique for reconstructing high resolution images of clinically relevant structures in sub tissue. Clinical applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and real-time blood oxygenation measurements. This modality is relatively new so development of efficient reconstruction procedures is still an active field. Efficient development of new photoacoustic reconstruction procedures requires two things. A user-friendly interface for accelerated prototyping and efficient simulations of the underlining physical models. We aim to deliver a package that can satisfy both of these needs. 
+Photoacoustic imaging is a medical imaging modality that shows promise as a novel technique for reconstructing high resolution images of clinically relevant structures in subtissue. Clinical applications range from cancerous tumor monitoring to tracking absorption of injected medication in bloodstreams and real-time blood oxygenation measurements. This modality is relatively new thus development of efficient reconstruction algorithms is still an active field. Efficient development of new photoacoustic reconstruction algorithms requires two things. A user-friendly interface for accelerated prototyping and efficient simulations of the underlining physical models. We aim to deliver a package that can satisfy both of these needs. 
 
 <!-- This is the example summary:
 The forces on stars, galaxies, and dark matter under external gravitational
@@ -67,9 +67,9 @@ This package has first class differentiability to support developments in scient
         norm(A*unet(z)-y)^2
     end
 
-![Least squares estimate with no prior.  figure.\label{fig:no_dip}](figs/_no_dip.png){ width=25% }
-![Least squares estimate with deep image prior given by convolutional neural network. figure.\label{fig:dip}](figs/_dip.png){ width=25% }
-![Ground truth image. Receivers located at top of model at red points. figure.\label{fig:gt}](figs/_gt.png){ width=25% }
+![Least squares estimate with no prior.](figs/_no_dip.png){ width=20% }
+![Least squares estimate with deep image prior given by convolutional neural network.](figs/_dip.png){ width=20% }
+![Ground truth image. Receivers located at top of model at red points.](figs/_gt.png){ width=20% }
 
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
