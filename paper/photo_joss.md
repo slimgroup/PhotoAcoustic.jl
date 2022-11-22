@@ -65,6 +65,10 @@ to experiment with new reconstruction algorithms. As a testament to its ease of 
 in `[@aOrozco:2022]`  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions `[@bOrozco:2022]`\. There is also ongoing work 
 that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 
+## Differentiable programming with physics 
+![Ground truth image. Receivers located at top of model at red points. figure.\label{fig:gt}](figs/_gt.png)
+![Least squares estimate with no prior.  figure.\label{fig:gt}](figs/_no_dip.png)
+![Least squares estimate with deep image prior given by convolutional neural network. figure.\label{fig:gt}](figs/_dip.png)
 
 <!-- 
 This is the example Statement of need:
