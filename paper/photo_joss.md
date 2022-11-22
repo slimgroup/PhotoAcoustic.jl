@@ -1,5 +1,5 @@
 ---
-title: 'PhotoAcoustic.jl: A Julia package for photoacoustic imaging'
+title: 'PhotoAcoustic.jl: A Julia package for efficient and differentiable photoacoustic imaging'
 tags:
   - Julia
   - Inverse problems
@@ -57,19 +57,24 @@ u(x,0) &= p_0 \\
 \dot u(x,0) &= 0.
 \end{align}$$
 
-Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation of its kind for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
+Our main mathematical contribution is the derivation of the adjoint sensitivities of the photoacoustic simulation with respect to both of its inputs: the initial photoacoustic distribution $p_0$ and the speed of sound $c$. As far as we know, this is the first derivation for the 2nd-order wave equation in time. These adjoint sensitivities are motivated by the derivative of a misfit function that is commonly used to reconstruction images based on least squares methods. Calculating these sensitivities entails another adjoint simulation that is implemented in the package with 
 efficient computation and user-friendly notation i.e the adjoint of the operator A is simply `A'` or `adjoint(A)`.
+
+## Differentiable programming 
+This package has first class differentiability to support developments in scientific machine learning. Previous works such as (cite ADCME.jl) rely on wrapper calls to PyTorch for autodiff. In this package, we manually implement adjoint rules that allows to chain physics derivatives with pure julia differentiation of machine learning models. To illustrate this, we implement the deep image prior by reparameterizing the image of interest as the output of a deep convolutional neural network (Unet) with minimal lines:
+
+    loss, grad = Flux.withgradient(z) do
+        norm(A*unet(z)-y)^2
+    end
+
+![Least squares estimate with no prior.  figure.\label{fig:no_dip}](figs/_no_dip.png){ width=25% }
+![Least squares estimate with deep image prior given by convolutional neural network. figure.\label{fig:dip}](figs/_dip.png){ width=25% }
+![Ground truth image. Receivers located at top of model at red points. figure.\label{fig:gt}](figs/_gt.png){ width=25% }
+
 
 `PhotoAcoustic.jl` enables researchers in inverse problems and in medical fields 
 to experiment with new reconstruction algorithms. As a testament to its ease of use, this software was recently used 
-in `[@aOrozco:2022]`  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions `[@bOrozco:2022]`\. There is also ongoing work 
-that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
-
-## Differentiable programming with physics 
-![Ground truth image. Receivers located at top of model at red points. figure.\label{fig:gt}](figs/_gt.png)
-![Least squares estimate with no prior.  figure.\label{fig:gt}](figs/_no_dip.png)
-![Least squares estimate with deep image prior given by convolutional neural network. figure.\label{fig:gt}](figs/_dip.png)
-
+in `[@aOrozco:2022]`  to study the uncertainty of photoacoustic reconstruction due to limited-view receiver geometry and the software was also tested in 3D reconstructions `[@bOrozco:2022]`\. There is also ongoing work that will explore techniques for calibration errors and novel uses of the sensitivity with respect to the speed of sound. 
 <!-- 
 This is the example Statement of need:
 `Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
