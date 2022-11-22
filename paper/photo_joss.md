@@ -13,13 +13,15 @@ authors:
     affiliation: 1
   - name: Mathias Louboutin
     orcid: 0000-0002-1255-2107
-    affiliation: 1
+    affiliation: 2
  - name: Felix J. Herrmann
     orcid: 0000-0003-1180-2167
-    affiliation: 1
+    affiliation: 1,2
 affiliations:
  - name: School of Computational Science and Engineering, Georgia Institute of Technology, USA
    index: 1
+ - name: School of Earth and Atmospheric Sciences, Georgia Institute of Technology, USA
+   index: 2
 date: 20 September 2022
 bibliography: photo_joss.bib
 
@@ -46,6 +48,7 @@ performing numerical orbit integration).
 Devito provides just-in-time compiled C kernels for efficient wave simulations. While JUDI gives access to 
 a user-friendly interface for operators that represent acoustic wave simulations. By taking advantage of this previous software and adding photoacoustic domain specific operators and functionality such as ultrasound transducers, `PhotoAcoustic.jl` is the first Julia package to simulate photoacoustic experiments and solve optimization problems for photoacoustic image reconstruction. 
 
+In the medical imaging community, the main photoacoustic code is the MATLAB implementation k-Wave [@treeby2010k]. We believe that Julia abstractions offer more readable code that accelerates development and that autograd capabilities of Julia are more amenable to scientific machine learing applications. Stride [@cueto2022stride] is a Python package that also uses Devito for backend wave simulations but only for active source experiments such as those found in ultrasound imaging. 
 
 ## Adjoint derivations for optimization
 We implement the photoacoustic simulation as the solution to a initial value partial differential equation:
@@ -67,7 +70,7 @@ efficient computation and user-friendly notation i.e the adjoint of the photoaco
 ## Differentiable programming 
 This package has first class differentiability to support development in scientific machine learning. Similar packages such as ADCME.jl [@xu2020adcme] rely on wrapper calls to TensorFlow for autograd. In this package, we manually implement adjoint rules that allows to chain physics derivatives with native Julia autograd of machine learning models. To illustrate this, we implement the deep image prior [@ulyanov2018deep] by reparameterizing the image of interest as the output of a convolutional neural network (UNet) with minimal coding effort:
 
-    loss, grad = Flux.withgradient(z) do
+    loss, grad = Flux.withgradient(Flux.params(unet)) do
         norm(A*unet(z)-y)^2
     end
 
