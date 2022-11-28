@@ -70,7 +70,7 @@ function blackman_upscale(p0::Array{T, N}, d::NTuple{N, T}, upsample_fact=1.25; 
 
     ###################Smooth Iniital pressure distribution by upsampling and also blackman smooth
     #upsample p0 in FFT space
-    p0_up = FFTResampling.resample(p0_zeropad, N_up, true; boundary_handling=false)
+    p0_up = FourierTools.resample(p0_zeropad, N_up; normalize=true)
 
     #smooth p0 using blackman filter
     window = Float32.(blackman(N_orig; padding=0));

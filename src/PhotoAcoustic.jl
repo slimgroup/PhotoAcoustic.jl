@@ -7,7 +7,7 @@ using LinearAlgebra, Reexport
 PhotoAcoustic_path = dirname(pathof(PhotoAcoustic))
 
 using JUDI.DSP, JUDI.PyCall, JUDI.FFTW, JUDI.JOLI
-using FFTResampling
+using FourierTools
 
 import Base: getindex, *, copy!, copyto!, similar, getproperty, display
 import JUDI: judiMultiSourceVector, judiComposedPropagator, judiPropagator, judiNoopOperator
