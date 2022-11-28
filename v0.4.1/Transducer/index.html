@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Transducers in PhotoAcoustic.jl · Photoacoustic imaging in Julia</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Photoacoustic imaging in Julia</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../derivations/">Theory</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../LSQR/">Solving photoacoustic least squares with IterativeSolvers.jl</a></li><li><a class="tocitem" href="../LearnedPrior/">Integrating Photoacoustic operations with automatic differention in Flux.</a></li><li class="is-active"><a class="tocitem" href>Transducers in PhotoAcoustic.jl</a><ul class="internal"><li class="toplevel"><a class="tocitem" href="#Model"><span>Model</span></a></li><li class="toplevel"><a class="tocitem" href="#Geometry"><span>Geometry</span></a></li><li class="toplevel"><a class="tocitem" href="#Propagators"><span>Propagators</span></a></li><li class="toplevel"><a class="tocitem" href="#Propagation"><span>Propagation</span></a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Transducers in PhotoAcoustic.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Transducers in PhotoAcoustic.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/slimgroup/PhotoAcoustic.jl/blob/master/docs/src/Transducer.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Transducers-in-PhotoAcoustic.jl"><a class="docs-heading-anchor" href="#Transducers-in-PhotoAcoustic.jl">Transducers in PhotoAcoustic.jl</a><a id="Transducers-in-PhotoAcoustic.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Transducers-in-PhotoAcoustic.jl" title="Permalink"></a></h1><p>One of the main compoenent of real world photoacoustic imaging and inversion, and more generally medical wave-equation based inversion (ultrasound, ...) is the necessity to model transducers properly.</p><p>Therefore, in Photoacoustic, we offer a simpler but effective implementation of a transducer as a plane (line in 2D) dipole. In the following we illustrate the usage of transducer and highligh the impace on the wavefield</p><pre><code class="language-julia">using PhotoAcoustic, SlimPlotting, PyPlot, JUDI</code></pre><h1 id="Model"><a class="docs-heading-anchor" href="#Model">Model</a><a id="Model-1"></a><a class="docs-heading-anchor-permalink" href="#Model" title="Permalink"></a></h1><p>For illustration purpose, we consider a simpel constant velocity model</p><pre><code class="language-julia">n, d, o = (201, 201), (0.08, 0.08), (0., 0.)
+model = Model(n, d, o, 1.5f0 * ones(Float32, 201, 201))</code></pre><pre><code class="language-none">Model (n=(201, 201), d=(0.08f0, 0.08f0), o=(0.0f0, 0.0f0)) with parameters [:m]</code></pre><h1 id="Geometry"><a class="docs-heading-anchor" href="#Geometry">Geometry</a><a id="Geometry-1"></a><a class="docs-heading-anchor-permalink" href="#Geometry" title="Permalink"></a></h1><p>Let&#39;s now define our acquisition geometry as a circle and visualize it on top of the model.</p><pre><code class="language-julia"># Set up receiver geometry
+ntransducers = 64
+domain_x = (n[1] - 1)*d[1]
+domain_z = (n[2] - 1)*d[2]
+rad = .95*domain_x / 2
+xrec, zrec, theta = circle_geom(domain_x / 2, domain_z / 2, rad, ntransducers)
+yrec = 0f0 # 2d so always 0
+xsrc, ysrc, zsrc = [Float32(domain_x * .5f0)], [0f0], [Float32(domain_z * .5f0)]</code></pre><pre><code class="language-none">(Float32[8.0], Float32[0.0], Float32[8.0])</code></pre><pre><code class="language-julia">scatter(xrec, zrec)
+scatter(xsrc, zsrc)
+plot_velocity(model.m; new_fig=false, name=&quot;Transducer positions&quot;)</code></pre><p><img src="../Transducer_files/Transducer_6_0.png" alt="png"/></p><pre><code class="language-julia">plot_velocity(model.m; new_fig=false, name=&quot;Transducer orientation&quot;)
+for t=1:ntransducers
+    # y pointing down convention so need the minus sign
+    dx, dy = -1 .* sincos(theta[t] - pi/2)
+    arrow(x=xrec[t], y=zrec[t], dx=dx, dy=dy, color=&quot;r&quot;)
+end</code></pre><p><img src="../Transducer_files/Transducer_7_0.png" alt="png"/></p><h1 id="Propagators"><a class="docs-heading-anchor" href="#Propagators">Propagators</a><a id="Propagators-1"></a><a class="docs-heading-anchor-permalink" href="#Propagators" title="Permalink"></a></h1><p>With our geometry define, we can create our propagators and comapre the data with what a point receiver would record. Because we. designed PhotoAcoustic to be an extension of JUDI, we can for this tutorial ignore the initial state propagation and focus on point source propagation for illustration purposes.</p><pre><code class="language-julia">dt = 0.01f0 # microseconds
+time_rec = 15f0 # microseconds
+f0 = .01f0/dt # 100 MHz
+recGeometry = Geometry(xrec, yrec, zrec; dt=dt, t=time_rec, nsrc=1)</code></pre><pre><code class="language-none">GeometryIC{Float32} wiht 1 sources</code></pre><pre><code class="language-julia">Ainv = judiModeling(model; options=Options(space_order=16))</code></pre><pre><code class="language-none">JUDI forward{Float32} propagator (x * z * time) -&gt; (x * z * time)</code></pre><pre><code class="language-julia">Pr = judiProjection(recGeometry)
+Prtrans = judiTransducerProjection(recGeometry, d[1], .25f0, [theta])</code></pre><pre><code class="language-none">┌ Warning: Only one angle provided, assuming 2D model
+└ @ PhotoAcoustic /Users/mathiaslouboutin/.julia/dev/PhotoAcoustic/src/transducer.jl:71
+
+
+
+
+
+judiProjection{Float32}(AbstractSize(Dict{Symbol, Any}(:src =&gt; 1, :rec =&gt; [64], :time =&gt; Integer[1501])), AbstractSize(Dict{Symbol, Any}(:x =&gt; 0, :src =&gt; 1, :y =&gt; 0, :z =&gt; 0, :time =&gt; Integer[1501])), PhotoAcoustic.TransducerGeometry{Float32, 0.08f0} wiht 1 sources)</code></pre><pre><code class="language-julia">function sinfun(f0, dt, time_rec)
+    time = Float32.(0f0:dt:time_rec)
+    return reshape(Float32.(sin.(2 * time .* pi * f0)), : ,1)
+end</code></pre><pre><code class="language-none">sinfun (generic function with 1 method)</code></pre><pre><code class="language-julia"># Simple point source
+srcGeom = Geometry(xsrc, ysrc, zsrc; dt=dt, t=time_rec)
+Ps = judiProjection(srcGeom)
+Pstrans = judiTransducerProjection(srcGeom, d[1], [[.25f0]], [[0f0]]) # Transducer as source
+q = judiVector(srcGeom, sinfun(f0, dt, time_rec))</code></pre><pre><code class="language-none">┌ Warning: Only one angle provided, assuming 2D model
+└ @ PhotoAcoustic /Users/mathiaslouboutin/.julia/dev/PhotoAcoustic/src/transducer.jl:71
+
+
+
+
+
+judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><h1 id="Propagation"><a class="docs-heading-anchor" href="#Propagation">Propagation</a><a id="Propagation-1"></a><a class="docs-heading-anchor-permalink" href="#Propagation" title="Permalink"></a></h1><p>We can now propagate and look at our difference fields. We can clearly see differences in directivity.</p><pre><code class="language-julia">d_pp = Pr * Ainv * Ps&#39; *q</code></pre><pre><code class="language-none">Building forward operator
+Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><pre><code class="language-julia">d_pt = Pr * Ainv * Pstrans&#39; *q</code></pre><pre><code class="language-none">Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><pre><code class="language-julia">d_tp = Prtrans * Ainv * Ps&#39; *q</code></pre><pre><code class="language-none">Operator `forward` ran in 0.05 s
+
+
+
+
+
+judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><pre><code class="language-julia">d_tt = Prtrans * Ainv * Pstrans&#39; *q</code></pre><pre><code class="language-none">Operator `forward` ran in 0.05 s
+
+
+
+
+
+judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><pre><code class="language-julia">figure(figsize=(12, 12))
+subplot(221)
+plot_sdata(d_pp; cmap=&quot;seismic&quot;, name=&quot;Point src, Point rec&quot;, new_fig=false)
+subplot(222)
+plot_sdata(d_pt; cmap=&quot;seismic&quot;, name=&quot;Trans src, Point rec&quot;, new_fig=false)
+subplot(223)
+plot_sdata(d_tp; cmap=&quot;seismic&quot;, name=&quot;Point src, Trans rec&quot;, new_fig=false)
+subplot(224)
+plot_sdata(d_tt; cmap=&quot;seismic&quot;, name=&quot;Trans src, Trans rec&quot;, new_fig=false)</code></pre><p><img src="../Transducer_files/Transducer_19_0.png" alt="png"/></p><p>Since we are fully comaptible with standard JUDI propagation, we can also directly look at the wavefield for a better understanding</p><pre><code class="language-julia">u_p = Ainv * Ps&#39; * q</code></pre><pre><code class="language-none">Building forward operator
+Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiWavefield{Float32} with 1 sources</code></pre><pre><code class="language-julia">u_t = Ainv * Pstrans&#39; *q</code></pre><pre><code class="language-none">Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiWavefield{Float32} with 1 sources</code></pre><pre><code class="language-julia">figure(figsize=(12, 6))
+subplot(121)
+plot_sdata(u_p.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Point src wavefield&quot;, new_fig=false)
+subplot(122)
+plot_sdata(u_t.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Trans src, wavefield&quot;, new_fig=false)</code></pre><p><img src="../Transducer_files/Transducer_23_0.png" alt="png"/></p><p>Let&#39;s change the orientation of the source and see the difference</p><pre><code class="language-julia">Pstrans.geometry.θ[1][1] = Float32(pi/4)</code></pre><pre><code class="language-none">0.7853982f0</code></pre><pre><code class="language-julia">u_t = Ainv * Pstrans&#39; *q</code></pre><pre><code class="language-none">Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiWavefield{Float32} with 1 sources</code></pre><pre><code class="language-julia">figure(figsize=(12, 6))
+subplot(121)
+plot_sdata(u_p.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Point src wavefield&quot;, new_fig=false)
+subplot(122)
+plot_sdata(u_t.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Trans src, wavefield&quot;, new_fig=false)</code></pre><p><img src="../Transducer_files/Transducer_27_0.png" alt="png"/></p><p>Now let&#39;s change the radius and the frequency of the transducer to highligh the directionality</p><pre><code class="language-julia">Pstrans.geometry.θ[1][1] = 0f0
+Pstrans.geometry.r[1][1] = Float32(5 * d[1])</code></pre><pre><code class="language-none">0.4f0</code></pre><pre><code class="language-julia">time = reshape(0f0:dt:time_rec, 1501 ,1)
+f0 = 2.5f0
+q2 = judiVector(deepcopy(srcGeom), sinfun(f0, dt, time_rec))</code></pre><pre><code class="language-none">judiVector{Float32, Matrix{Float32}} with 1 sources</code></pre><pre><code class="language-julia">u_t = Ainv * Pstrans&#39; * q2</code></pre><pre><code class="language-none">Operator `forward` ran in 0.04 s
+
+
+
+
+
+judiWavefield{Float32} with 1 sources</code></pre><pre><code class="language-julia">figure(figsize=(12, 6))
+subplot(121)
+plot_sdata(u_p.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Point src wavefield&quot;, new_fig=false)
+subplot(122)
+plot_sdata(u_t.data[1][300, :, :], d; cmap=&quot;seismic&quot;, name=&quot;Trans src, wavefield&quot;, new_fig=false)</code></pre><p><img src="../Transducer_files/Transducer_32_0.png" alt="png"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../LearnedPrior/">« Integrating Photoacoustic operations with automatic differention in Flux.</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 28 November 2022 18:00">Monday 28 November 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
