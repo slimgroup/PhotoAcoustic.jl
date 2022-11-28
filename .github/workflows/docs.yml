@@ -22,6 +22,7 @@ jobs:
           pip install --upgrade jupyter Pygments "MarkupSafe==2.0.1" "jinja2<3.1"
           jupyter nbconvert --to markdown --output-dir='../../docs/src' --output LearnedPrior Flux_AD_Integration_Deep_Prior.ipynb
           jupyter nbconvert --to markdown --output-dir='../../docs/src' --output LSQR Least_Squares_Iterative_Solvers_2D.ipynb
+          jupyter nbconvert --to markdown --output-dir='../../docs/src' --output Transducer transducer.ipynb
         working-directory: examples/notebooks/
 
       - name: Build and deploy
