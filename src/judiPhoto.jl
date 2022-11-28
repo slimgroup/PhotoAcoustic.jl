@@ -60,9 +60,12 @@ process_input_data(::judiPhoto{D, :forward}, q::judiInitialState{D}) where {D<:N
 ############################################################
 
 function _forward_prop(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObject; dm=nothing) where {T, O}
-
     # Get necessary inputs 
     recGeometry, init_dist = make_input(J, q)
+
+    # Compute illumination ?
+    opname = isnothing(dm) ? (:forward) : (:born)
+    illum = compute_illum(J.F.model, opname)
 
     # Check if need to skip compute
     if (~isnothing(dm) && norm(dm) == 0) || (norm(init_dist) == 0)
@@ -79,16 +82,21 @@ function _forward_prop(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObject; dm
     rec_coords = setup_grid(recGeometry, J.F.model.n)
 
     # Devito interface
-    dsim = wrapcall_data(op, modelPy, rec_coords, init_dist, nt, space_order=J.F.options.space_order,
-                         ic=J.F.options.IC)
-    dsim = time_resample(dsim, dtComp, recGeometry)
+    dsim, I = wrapcall_data(op, modelPy, rec_coords, init_dist, nt, space_order=J.F.options.space_order,
+                            ic=J.F.options.IC, illum=illum)
 
-    # Output shot record as judiVector
-    return judiVector{Float32, Matrix{Float32}}(1, recGeometry, [dsim])
+    dsim = judiVector{Float32, Matrix{Float32}}(1, recGeometry, [time_resample(dsim, dtComp, recGeometry)])
+    !illum && (return dsim)
+
+    I = remove_padding(I, modelPy.padsizes)
+    return dsim, PhysicalParameter(I, modelPy.spacing, modelPy.origin)
 end
+
 
 function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObject; init=nothing) where {T, O}
     options = J.options
+    opname = isnothing(init) ? (:adjoint) : (:adjoint_born)
+
     # Get input data from source and operator
     recGeometry, init_dist = make_input(J, init)
     srcData = make_input(q)
@@ -96,6 +104,9 @@ function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObjec
     # Set up Python model structure
     modelPy = devito_model(J.F.model, J.F.options)
     dtComp  = convert(Float32, modelPy."critical_dt")
+
+    # Compute illumination ?
+    illum = compute_illum(J.F.model, opname)
 
     # Set up coordinates
     rec_coords = setup_grid(recGeometry, J.F.model.n)
@@ -107,12 +118,19 @@ function _reverse_propagate(J::judiPhoto{T, O}, q::AbstractArray{T}, op::PyObjec
 
     # Gradient options
     length(options.frequencies) == 0 ? freqs = nothing : freqs = options.frequencies
+    pyfunc = isnothing(init) ? wrapcall_weights : wrapcall_function
+    argout = pyfunc(op, args..., space_order=J.F.options.space_order, freq_list=freqs,
+                           checkpointing=options.optimal_checkpointing, ic=options.IC, illum=illum,
+                           dft_sub=options.dft_subsampling_factor[1], t_sub=options.subsampling_factor)
 
-    g = wrapcall_function(op, args..., space_order=J.F.options.space_order, freq_list=freqs,
-               checkpointing=options.optimal_checkpointing, ic=options.IC,
-               dft_sub=options.dft_subsampling_factor[1], t_sub=options.subsampling_factor)
-    g = remove_padding(g, modelPy.padsizes; true_adjoint=(J.options.sum_padding && ~isnothing(init)))
-    return g
+    # Actual adjoint
+    g = remove_padding(argout[1], modelPy.padsizes; true_adjoint=(J.options.sum_padding && ~isnothing(init)))
+    !illum && (return g)
+
+    # Illums
+    argout = filter_none(argout[2:end])
+    Is = JUDI.post_process(argout, modelPy, Val(:adjoint_born), G, Options(;sum_padding=false))
+    return g, Is...
 end
 
 # JUDI interface for single source wave operator

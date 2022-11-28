@@ -25,17 +25,21 @@ def forwardis(model, rcv_coords, init_dist, nt, **kwargs):
 
     summary = op(**kw)
 
+    # Illumination
+    I = kw.get('Iu', None)
+
     # Check wich wavefield is wanted as output
     dft = kwargs.get('freq_list', None) is not None
     dft_modes = (kw['ufr%s' % u.name], kw['ufi%s' % u.name]) if dft else None
     us = kw['us_u'] if kwargs.get('t_sub', 0) > 1 else u
     # Reset initial condition in case we have a buffered `u` that needs to be reused
     us.data[0] = np.array(init_dist)
-    return rcv, dft_modes or us, summary
+    return rcv, dft_modes or us, I, summary
 
 
 def forwardis_data(*args, **kwargs):
-    return forwardis(*args, **kwargs)[0].data
+    rcv, u, I, summary = forwardis(*args, **kwargs)
+    return rcv.data, getattr(I, "data", None)
 
 
 def bornis(model, rcv_coords, init_dist, nt, **kwargs):
@@ -56,11 +60,15 @@ def bornis(model, rcv_coords, init_dist, nt, **kwargs):
 
     op(**kw)
 
-    return rcv, u
+    # Illumination
+    I = kw.get('Iu', None)
+
+    return rcv, u, I
 
 
 def bornis_data(*args, **kwargs):
-    return bornis(*args, **kwargs)[0].data
+    rcv, u, I = bornis(*args, **kwargs)
+    return rcv.data, getattr(I, "data", None)
 
 
 def adjointis(model, y, rcv_coords, **kwargs):
@@ -71,7 +79,7 @@ def adjointis(model, y, rcv_coords, **kwargs):
     kwargs.pop('t_sub', None)
     kwargs.pop('ic', None)
     # Make dt source
-    rcv, v = adjoint(model, -y, None, rcv_coords, **kwargs)[:2]
+    rcv, v, I = adjoint(model, -y, None, rcv_coords, **kwargs)[:3]
 
     # Extract time derivative at 0.
     init = Function(name="ini", grid=model.grid, space_order=0)
@@ -80,7 +88,7 @@ def adjointis(model, y, rcv_coords, **kwargs):
     op = Operator(Eq(init, mrm * v.dt))
     op(dt=model.critical_dt, time_m=0, time_M=0)
 
-    return init.data
+    return init.data, getattr(I, "data", None)
 
 
 def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list=None,
@@ -90,16 +98,16 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
     """
     nt = y.shape[0]
     born_fwd = kwargs.get('born_fwd', False)
-    rec, u, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
-                                     save=freq_list is None, freq_list=freq_list,
-                                     t_sub=t_sub, **kwargs)
+    rec, u, Iu, _ = op_fwd_JIS[born_fwd](model, rcv_coords, init_dist, nt,
+                                         save=freq_list is None, freq_list=freq_list,
+                                         t_sub=t_sub, **kwargs)
 
     # Get operator
     kwargs['return_op'] = True
     op, g, kwg = gradient(model, y, rcv_coords, u, save=freq_list is None, freq=freq_list,
                           **kwargs)
     op(**kwg)
-
+    Iv = kwg.get('Iv', None)
     # Need the intergation by part correction since we compute the gradient on
     # u * v.dt (see Documentation)
     if freq_list is None:
@@ -107,6 +115,6 @@ def adjointbornis(model, y, rcv_coords, init_dist, checkpointing=None, freq_list
         op0 = Operator(Eq(g, g -  w * kwg['v'].dt * u))
         op0(dt=model.critical_dt, time_m=0, time_M=0)
     
-    return g.data
+    return g.data, getattr(Iu, "data", None), getattr(Iv, "data", None)
 
 op_fwd_JIS = {False: forwardis, True: bornis}

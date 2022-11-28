@@ -1,7 +1,7 @@
 name = "PhotoAcoustic"
 uuid = "86b14aa7-fcb7-4836-b4c7-056f45a9c77b"
 authors = ["rafaelorozco <rao9787@gmail.com>", "Mathias Louboutin <mathias.louboutin@gmail.com"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 FFTResampling = "c3173eba-33fe-4761-8a84-0ec65b39ba9a"
@@ -11,7 +11,7 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-JUDI = "^3.1.12"
+JUDI = "^3.2.0"
 Reexport = "1"
 julia = "1.6"
 
