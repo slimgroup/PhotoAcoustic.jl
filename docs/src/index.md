@@ -4,10 +4,15 @@ Welcome to the documentation of PhotoAcoustic.jl , a julia package for photoacou
 
 ## Installation
 
-At the moment, PhotoAcoustic.jl is in developement stage and isn't registered in the Julia General registry. To install PhotoAcoustic.jl run
+PhotoAcoustic.jl is registered in the Julia General registry. To install PhotoAcoustic.jl, press the "]" and run
 
 ```
-pkg> add/dev https://github.com/slimgroup/PhotoAcoustic.jl
+pkg> add PhotoAcoustic
+```
+or to clone a git repository for development:
+
+```
+pkg> dev PhotoAcoustic
 ```
 
 ## API
