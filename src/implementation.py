@@ -78,16 +78,21 @@ def adjointis(model, y, rcv_coords, **kwargs):
     kwargs.pop('checkpointing', None)
     kwargs.pop('t_sub', None)
     kwargs.pop('ic', None)
-    # Make dt source
-    rcv, v, I = adjoint(model, -y, None, rcv_coords, **kwargs)[:3]
+
+    # Run adjoint simulation with JUDI
+    kwargs['fw'] = False
+    op, v, rcv, kw = forward(model, rcv_coords, None, -y,**kwargs)
 
     # Extract time derivative at 0.
     init = Function(name="ini", grid=model.grid, space_order=0)
+
     # Correct for default scaling in injection
     mrm = model.m * model.irho
     op = Operator(Eq(init, mrm * v.dt))
     op(dt=model.critical_dt, time_m=0, time_M=0)
 
+
+    I = kw.get('Iu', None)
     return init.data, getattr(I, "data", None)
 
 
