@@ -24,19 +24,11 @@ jobs:
       fail-fast: false
 
       matrix:
-        version:
-          - '1.6'
-          - '1.7'
-          - '1.8'
-        os:
-          - ubuntu-latest
-        arch:
-          - x64
-
+        version: ['1.6', '1.7', '1.8', '1']
+        os: [ubuntu-latest]
         include:
           - os: macos-latest
             version: '1'
-            arch: x64
 
     steps:
       - name: Checkout PhotoAcoustic
@@ -46,7 +38,7 @@ jobs:
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
+          arch: x64
 
       - name: Install GCC 9
         if : runner.os == 'macOS'
