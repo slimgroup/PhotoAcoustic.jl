@@ -46,7 +46,7 @@ end
 
 copyto!(jv::judiInitialState, jv2::judiInitialState) = copy!(jv, jv2)
 getindex(a::judiInitialState{T}, srcnum::RangeOrVec) where T = judiInitialState{T}(length(srcnum), a.data)
-make_input(q::judiInitialState, model::Model, options::JUDIOptions) = pad_array(q.data[1], pad_sizes(model, options; so=0); mode=:zeros)
+make_input(q::judiInitialState, model::JUDI.AbstractModel, options::JUDIOptions) = pad_array(q.data[1], pad_sizes(model, options; so=0); mode=:zeros)
 
 # Parallel reduction
 JUDI.single_reduce!(J::judiInitialState, I::judiInitialState) = push!(J, I)

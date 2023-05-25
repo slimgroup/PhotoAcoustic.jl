@@ -31,7 +31,7 @@ function getindex(G::TransducerGeometry{T, D}, I) where {T, D}
     return TransducerGeometry{T, D}(G.geometry[I], G.r[I], G.θ[I], iϕ, iψ)
 end
 
-getindex(G::TransducerGeometry, I::Integer) where T = getindex(G, I:I)
+getindex(G::TransducerGeometry, I::Integer) = getindex(G, I:I)
 getproperty(G::TransducerGeometry, s::Symbol) = s ∈ [:geometry, :r, :θ, :ϕ, :ψ] ? getfield(G, s) : getproperty(G.geometry, s)
 Geometry(G::TransducerGeometry{T, D}) where {T, D} = TransducerGeometry{T, D}(Geometry(G.geometry), G.r, G.θ, G.ϕ, G.ψ)
 
