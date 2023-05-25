@@ -1,7 +1,7 @@
 name = "PhotoAcoustic"
 uuid = "86b14aa7-fcb7-4836-b4c7-056f45a9c77b"
 authors = ["rafaelorozco <rao9787@gmail.com>", "Mathias Louboutin <mathias.louboutin@gmail.com"]
-version = "0.4.2"
+version = "0.4.3"
 
 [deps]
 FourierTools = "b18b359b-aebc-45ac-a139-9c0ccbb2871e"

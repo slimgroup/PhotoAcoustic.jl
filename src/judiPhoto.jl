@@ -43,7 +43,7 @@ function judiPhoto(F::judiPropagator{D, O}, geometry::Geometry; nsrc=1) where {D
     return judiPhoto{D, :forward}(rec_space(geometry), space_src(F.model.n, nsrc), F, judiProjection(geometry), initState)
 end
 
-judiPhoto(model::Model, geometry::Geometry; options=Options(), nsrc=1) = judiPhoto(judiModeling(model; options=options), geometry; nsrc=nsrc)
+judiPhoto(model::JUDI.AbstractModel, geometry::Geometry; options=Options(), nsrc=1) = judiPhoto(judiModeling(model; options=options), geometry; nsrc=nsrc)
 *(F::judiDataModeling{D, O}, I::jAdjoint{<:judiInitialStateProjection{D}}) where {D, O} = judiPhoto{D, :forward}(F.m, space(F.model.n), F.F, F.rInterpolation, I)
 
 adjoint(J::judiPhoto{D, O}) where {D, O} = judiPhoto{D, adjoint(O)}(J.n, J.m, J.F, J.rInterpolation, J.Init)
